@@ -1,0 +1,14 @@
+# Optional: Postgres in Docker instead of a native install.
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: growthos
+      POSTGRES_PASSWORD: growthos
+      POSTGRES_DB: growthos
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
