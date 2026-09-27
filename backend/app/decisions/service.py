@@ -1,6 +1,7 @@
+import uuid
 from datetime import timedelta
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.common import utcnow
@@ -34,6 +35,21 @@ def record_decision(session: Session, profile: Profile, data: DecisionIn) -> Dec
     session.add(decision)
     session.commit()
     return decision
+
+
+def clear_decisions(
+    session: Session, profile: Profile, target_type: TargetType, target_id: uuid.UUID
+) -> int:
+    """Undo: forget every decision about a target, so it is undecided again."""
+    result = session.execute(
+        delete(Decision).where(
+            Decision.profile_id == profile.id,
+            Decision.target_type == target_type.value,
+            Decision.target_id == target_id,
+        )
+    )
+    session.commit()
+    return result.rowcount
 
 
 def list_decisions(session: Session, profile: Profile) -> list[Decision]:
