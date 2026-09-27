@@ -77,13 +77,17 @@ Instantiated from a **goal template** (`backend/data/goal_templates/*.yaml`), th
 | signals | list[signal] | what doing it provides |
 | cv_signal | int 1–5? | curated external prestige |
 | cv_signal_reason | str? | one-line rationale |
-| source, source_ref | str | adapter id + id in source |
+| credential_type, issuer_reputation | str?, int 1–5? | certifications only → tier (scoring.md §6) |
+| source, source_ref | str | adapter id (`curated`, `devpost`, `kaggle`) + id in source |
 | evidence_url | str | where the facts come from |
+| watch_url | str? | official page the deadline watcher checks (ADR 0006) |
+| deadline_source | str? | `source` (published by the adapter) or `extracted` (watcher, verified quote) |
+| deadline_quote, deadline_checked_at, watch_hash | | watcher evidence + last check + page hash |
 | fetched_at | datetime | |
 | dedup_key | str (unique) | normalized title + organizer + deadline date |
 | status | enum | `open`, `closed` |
 
-Deadline display: `deadline_at` → exact date · else `recurrence + last_known_deadline` → "expected ~<month>, not yet published" · else "deadline not published".
+Deadline display: `deadline_at` → exact date (with `quote` + `quote_url` when extracted) · else `recurrence + last_known_deadline` → "expected ~<month>, not yet published" · else "deadline not published".
 
 ## GrowthAction (non-opportunity actions)
 
@@ -119,11 +123,17 @@ Effect on ranking: `done`, `skipped`, `not_interested` → hidden; `planned` →
 **Novelty (weekly success metric):** items first seen in the last 7 days; `new_worthwhile` = those
 that pass the gates and are not marked `already_knew`. Returned with `/recommendations`.
 
-## API (M1)
+## SourceRun
+
+One row per source (and the deadline watcher) per run: `source`, `ran_at`, `status`
+(`ok` / `error` / `not_configured`), `fetched`, `created`, `updated`, `closed`, `error`.
+`GET /sources` shows the latest one per source.
+
+## API
 
 `GET /taxonomy` · `GET/PUT /profile` · `PUT /profile/skills` · `POST/DELETE /profile/items` ·
 `GET /goal-templates` · `GET/POST /goals` · `PATCH/DELETE /goals/{id}` · `GET /goals/{id}/gaps` ·
-`GET /opportunities` · `POST /sources/run` · `GET /recommendations?goal_id=&top_n=` ·
+`GET /opportunities` · `GET /sources` · `POST /sources/run` · `GET /recommendations?goal_id=&top_n=` ·
 `GET/POST /decisions` · `GET /health`
 
 **Weekly novelty metric** = items decided `planned`/`done` in the last 7 days that were *not* marked `already_knew`.

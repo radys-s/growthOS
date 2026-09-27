@@ -29,15 +29,39 @@ is new to me. → Tomáš checks this on the real profile; tune weights/curated 
 Known M1 limits: single user, no auth (local only); curated data needs manual weekly review;
 all curated eligibility is unverified; decisions can be undone but have no history view.
 
-## Later (only after M1 works well)
+## V1 — More sources + credential tiering ✅ (built 2026-09-27)
 
-- V1 polish: 5–10 quality adapters total, credential tiering in UI
+Decisions (2026-09-27): sources Kaggle API, Devpost, Czech competitions via the deadline watcher,
+and more curated data. The LLM is a free model via OmniRoute and only extracts facts (ADR 0006).
+
+- [x] Source infrastructure: shared HTTP client, `source_runs`, `GET /sources`, `SOURCES_ENABLED`
+- [x] Devpost adapter: open ML/AI hackathons, online or in Europe
+- [x] Kaggle adapter: official API with basic auth; without a token it reports "not configured"
+- [x] OmniRoute provider + deadline watcher: verbatim quote, date in the quote, future date (ADR 0006)
+- [x] Credential tiering S/A/B/C/Ignore ([scoring.md §6](scoring.md))
+- [x] Curated data: Otevřená věda, Nachytej AI, 4 certifications with type and reputation, `watch_url`
+- [x] Frontend: sources panel, Devpost/Kaggle badge, tier badge, deadline quote
+- [x] E2E in the browser (Devpost live, sources panel, badges)
+
+**Needs Tomáš:**
+- put `KAGGLE_USERNAME`/`KAGGLE_KEY` and `LLM_BASE_URL`/`LLM_API_KEY` in `backend/.env`;
+- have OmniRoute running.
+
+Until then Kaggle and the deadline watcher show "nenakonfigurováno" and are verified only on
+fixtures.
+
+To tune after review:
+- course certificates (NVIDIA DLI, Kaggle Learn) fall into Ignore under the spec formula;
+- hackathons dominate the full ranking; Top 5 is held by diversity.
+
+## Later
+
 - V2: automatic gap analysis, CV import, GitHub analysis, calendar/deadlines, decision history, learning recs
 - V3: Gmail source adapter (extraction → opportunity / deadline / achievement)
 - V4: Career Strategist — long-horizon roadmap that re-plans
 
 ## Open questions
 
-1. Kaggle token + Devpost adapter — after M1 (decided 2026-09-27).
-2. Which LLM provider for extraction once rules stop being enough (OmniRoute free model vs Claude API)?
+1. ~~Kaggle token + Devpost adapter~~ — done in V1.
+2. ~~LLM provider for extraction~~ — OmniRoute free model, any OpenAI-compatible endpoint (ADR 0006).
 3. Curated data review cadence — proposal: weekly, together with the dashboard check.
