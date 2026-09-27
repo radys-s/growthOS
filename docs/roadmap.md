@@ -18,7 +18,7 @@ source = **curated YAML only**; **no LLM** in M1 (ADR 0005).
 - [x] Curated source adapter + ingestion (upsert by `dedup_key`) + weekly scheduler job
 - [x] Curated data: real, evidence-backed opportunities + generic growth actions
 - [x] Ranking engine per [scoring.md](scoring.md) with unit tests
-- [ ] API: recommendations, gaps, opportunities, decisions
+- [x] API: recommendations, gaps, opportunities, decisions
 - [ ] Dashboard: Do next (reasons, factors) · Profile gaps · Opportunities · decision buttons
 - [ ] Profile page: skills, items, goal selection
 - [ ] E2E verification in browser
