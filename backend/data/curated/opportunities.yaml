@@ -7,6 +7,7 @@
 # - Dates without time = 23:59 Europe/Prague. Review this file weekly.
 # - watch_url: official page where the next deadline appears. The deadline watcher (ADR 0006)
 #   stores a deadline found there only with a verbatim quote; deadline_at here always wins.
+# - credential (kind certification only): type + issuer_reputation 1-5 → S/A/B/C/Ignore tier.
 
 - id: ceska-ai-olympiada
   kind: olympiad
@@ -301,3 +302,6 @@
   signals: [cloud, recognized_credential]
   cv_signal: 2
   cv_signal_reason: Průmyslová, ale jen foundational certifikace — pro AI stáž malý přírůstek.
+  credential:
+    type: industry_certification
+    issuer_reputation: 5

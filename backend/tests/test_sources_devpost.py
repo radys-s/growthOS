@@ -10,7 +10,12 @@ from sqlalchemy.orm import Session
 
 from app.opportunities.models import Opportunity
 from app.sources.base import NormalizedOpportunity
-from app.sources.devpost import DevpostSource, parse_prize_usd, parse_submission_end
+from app.sources.devpost import (
+    DevpostSource,
+    _cv_signal,
+    parse_prize_usd,
+    parse_submission_end,
+)
 from app.sources.models import SourceRun
 from app.sources.runner import run_sources
 
@@ -86,10 +91,18 @@ def test_fetch_filters_and_maps() -> None:
     assert {"hackathon_result", "teamwork", "deep_learning"} <= set(amazon.signals)
     assert str(amazon.evidence_url) == str(amazon.url)
 
-    assert items["31493"].cv_signal == 2  # ₹ prize is not converted → default
+    assert items["31493"].cv_signal == 1  # ₹ prize is not converted, 36 registrations
     assert items["90001"].location == "Prague, Czech Republic"
     assert items["90004"].deadline_at is None  # unparseable → not published, never guessed
     assert "frontend" in items["31024"].signals  # Web theme
+
+
+@pytest.mark.parametrize(
+    ("prize", "registrations", "expected"),
+    [(50_000, 10, 3), (2_000, 10, 2), (None, 500, 2), (None, None, 1), (500, 100, 1)],
+)
+def test_cv_signal(prize: float | None, registrations: int | None, expected: int) -> None:
+    assert _cv_signal(prize, registrations) == expected
 
 
 def test_fetch_stops_on_empty_page() -> None:

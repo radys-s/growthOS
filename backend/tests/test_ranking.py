@@ -249,3 +249,31 @@ def test_weak_factors_are_not_quoted_as_reasons() -> None:
     # Unknown CV (0.4), no deadline (0.2), low probability: none may become a reason.
     item = score(_cand(signals=["teamwork"], difficulty=5), PROFILE, GOAL, NOW, TAX)
     assert not any(r.startswith(("Silný signál", "Termín", "Máš dobrou")) for r in item.reasons)
+
+
+# --- credential tiers ---------------------------------------------------------------------
+
+
+def test_credential_tier_on_ranked_item_and_ignore_gate() -> None:
+    on_goal = _cand(
+        "cert",
+        kind="certification",
+        signals=["deployment"],
+        credential={"type": "industry_certification", "issuer_reputation": 5},
+    )
+    off_goal = _cand(
+        "badge",
+        kind="certification",
+        signals=["python"],
+        credential={"type": "participation_badge", "issuer_reputation": 2},
+    )
+    plain = _cand("plain")
+    result = rank([on_goal, off_goal, plain], PROFILE, GOAL, NOW)
+
+    by_key = {i.candidate.key: i for i in result.ranked}
+    assert by_key["cert"].credential_tier is not None
+    assert by_key["cert"].credential_tier.tier == "S"  # deployment: on goal, uncovered gap
+    assert by_key["plain"].credential_tier is None
+    assert [(f.candidate.key, f.reason) for f in result.filtered] == [
+        ("badge", "Nízká hodnota certifikátu pro tvůj cíl")
+    ]

@@ -9,6 +9,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel
 
+from app.credentials import Credential, CredentialTier, Tier, credential_tier, goal_fit
 from app.opportunities.deadlines import DeadlineInfo, DeadlineKind
 from app.sources.base import Eligibility
 from app.taxonomy import FactorWeights, SignalCategory, Taxonomy, load_taxonomy
@@ -19,6 +20,7 @@ PENALTIES = ("effort", "cost")
 DEFAULT_WEEKLY_HOURS = 5  # used when the profile has no weekly budget
 HIDING_DECISIONS = {"done", "skipped", "not_interested"}
 MAX_PER_KIND = 2
+LOW_CREDENTIAL_VALUE = "Nízká hodnota certifikátu pro tvůj cíl"
 MIN_REASON_CONTRIBUTION = 0.02
 # A factor must also be genuinely high to be quoted as a reason (e.g. the unknown-CV default 0.4
 # or the no-deadline urgency 0.2 must never read as "strong CV signal" / "deadline is near").
@@ -49,6 +51,7 @@ class GoalFacts(BaseModel):
 class Candidate(BaseModel):
     key: str  # "opportunity:<id>" or "action:<id>"
     source: str  # "opportunity" | "action"
+    origin: str | None = None  # opportunity source adapter: "curated" | "devpost" | "kaggle"
     target_id: uuid.UUID | None = None  # row id, used to record decisions
     kind: str
     title: str
@@ -63,6 +66,7 @@ class Candidate(BaseModel):
     cost_eur: int | None = None
     deadline: DeadlineInfo | None = None  # None for growth actions
     eligibility: Eligibility | None = None  # None for growth actions
+    credential: Credential | None = None  # certifications with curated type + issuer reputation
     closed: bool = False
     decision: str | None = None  # latest decision status
     is_new: bool = False  # first seen within the novelty window
@@ -83,6 +87,7 @@ class RankedItem(BaseModel):
     contributions: dict[str, float]
     reasons: list[str]
     warnings: list[str]
+    credential_tier: CredentialTier | None = None
 
 
 class FilteredItem(BaseModel):
@@ -318,6 +323,10 @@ def score(
 ) -> RankedItem:
     factors = compute_factors(candidate, profile, goal, now, taxonomy)
     contrib = contributions(factors, goal.weights)
+    tier = None
+    if candidate.credential is not None:
+        fit = goal_fit(factors["relevance"], factors["gap_coverage"])
+        tier = credential_tier(candidate.credential, fit)
     positive = sorted(
         (
             (name, value)
@@ -333,6 +342,7 @@ def score(
         contributions={k: round(v, 4) for k, v in contrib.items()},
         reasons=[_reason(name, candidate, profile, goal, taxonomy) for name, _ in positive[:3]],
         warnings=_warnings(candidate, profile),
+        credential_tier=tier,
     )
 
 
@@ -376,8 +386,13 @@ def rank(
         reason = gate(candidate, profile, now)
         if reason is not None:
             filtered.append(FilteredItem(candidate=candidate, reason=reason))
+            continue
+        item = score(candidate, profile, goal, now, taxonomy)
+        if item.credential_tier is not None and item.credential_tier.tier == Tier.IGNORE:
+            # tier gate: needs the goal-dependent factors, so it runs after scoring
+            filtered.append(FilteredItem(candidate=candidate, reason=LOW_CREDENTIAL_VALUE))
         else:
-            ranked.append(score(candidate, profile, goal, now, taxonomy))
+            ranked.append(item)
     ranked.sort(key=_sort_key)
     filtered.sort(key=lambda f: (f.candidate.title, f.candidate.key))
     return RankingResult(top=diversify(ranked, top_n), ranked=ranked, filtered=filtered)

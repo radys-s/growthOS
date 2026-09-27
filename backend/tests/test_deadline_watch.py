@@ -30,7 +30,8 @@ WATCH = "https://www.kasiopea.cz/"
 PAGE = """<html><head><script>var deadline = "1. 1. 2030";</script></head><body>
 <h1>Kasiopea 2026/27</h1>
 <p>Domácí kolo probíhá online.</p>
-<p>Kasiopea je programátorská soutěž pro středoškoláky, kteří se chtějí naučit řešit algoritmické úlohy a potkat podobně naladěné lidi.</p>
+<p>Kasiopea je programátorská soutěž pro středoškoláky, kteří se chtějí naučit
+řešit algoritmické úlohy a potkat podobně naladěné lidi.</p>
 <p>Registrace do domácího kola je otevřena do&nbsp;15.&nbsp;11.&nbsp;2026 včetně.</p>
 <p>Finále se koná 20. 2. 2027.</p></body></html>"""
 QUOTE = "Registrace do domácího kola je otevřena do 15. 11. 2026 včetně."

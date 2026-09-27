@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.credentials import Credential
 from app.decisions.service import latest_decisions
 from app.goals.models import Goal
 from app.opportunities.deadlines import opportunity_deadline
@@ -77,6 +78,7 @@ def _opportunity_candidate(
     return Candidate(
         key=key,
         source="opportunity",
+        origin=row.source,
         target_id=row.id,
         kind=row.kind,
         title=row.title,
@@ -91,6 +93,11 @@ def _opportunity_candidate(
         cost_eur=row.cost_eur,
         deadline=opportunity_deadline(row, now),
         eligibility=Eligibility.model_validate(row.eligibility or {}),
+        credential=(
+            Credential(type=row.credential_type, issuer_reputation=row.issuer_reputation)
+            if row.credential_type and row.issuer_reputation
+            else None
+        ),
         closed=row.status != "open",
         decision=decisions.get(key),
         is_new=row.first_seen_at >= since,

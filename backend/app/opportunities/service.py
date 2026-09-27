@@ -44,6 +44,8 @@ def _values(item: NormalizedOpportunity) -> dict[str, Any]:
         "signals": list(item.signals),
         "cv_signal": item.cv_signal,
         "cv_signal_reason": item.cv_signal_reason,
+        "credential_type": item.credential.type.value if item.credential else None,
+        "issuer_reputation": item.credential.issuer_reputation if item.credential else None,
         "evidence_url": str(item.evidence_url),
         "watch_url": str(item.watch_url) if item.watch_url else None,
         "dedup_key": item.dedup_key,
