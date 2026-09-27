@@ -2,6 +2,7 @@ import os
 
 os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["SCHEDULER_ENABLED"] = "false"
+os.environ["SOURCES_ENABLED"] = "curated"  # network sources are tested with fixtures
 
 from collections.abc import Iterator  # noqa: E402
 

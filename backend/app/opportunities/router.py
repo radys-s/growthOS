@@ -4,7 +4,7 @@ from app.common import utcnow
 from app.db import DbSession
 from app.opportunities.schemas import OpportunityOut
 from app.opportunities.service import list_open_opportunities, to_out
-from app.sources.runner import RunReport, run_sources
+from app.sources.runner import RunReport, SourceStatus, run_sources, source_statuses
 
 router = APIRouter(tags=["opportunities"])
 
@@ -18,3 +18,8 @@ def get_opportunities(session: DbSession) -> list[OpportunityOut]:
 @router.post("/sources/run", response_model=RunReport)
 def post_run_sources(session: DbSession) -> RunReport:
     return run_sources(session, utcnow())
+
+
+@router.get("/sources", response_model=list[SourceStatus])
+def get_sources(session: DbSession) -> list[SourceStatus]:
+    return source_statuses(session)

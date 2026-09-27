@@ -17,7 +17,7 @@ from app.goals.router import router as goals_router
 from app.opportunities.router import router as opportunities_router
 from app.profile.router import router as profile_router
 from app.recommendations.router import router as recommendations_router
-from app.scheduler import refresh_sources, start_scheduler
+from app.scheduler import start_scheduler
 from app.seed import run as run_seed
 
 logger = logging.getLogger("growthos")
@@ -33,11 +33,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         logger.exception("startup seed failed (is the database migrated?)")
     scheduler = None
     if get_settings().scheduler_enabled:
-        try:
-            refresh_sources()
-        except Exception:
-            logger.exception("startup source refresh failed")
-        scheduler = start_scheduler()
+        scheduler = start_scheduler(run_now=True)
     yield
     if scheduler is not None:
         scheduler.shutdown(wait=False)

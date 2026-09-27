@@ -1,0 +1,350 @@
+{
+ "pages": [
+  {
+   "hackathons": [
+    {
+     "id": 30992,
+     "title": "Build, Ship, Shape: Amazon Developer Hackathon",
+     "displayed_location": {
+      "icon": "globe",
+      "location": "Online"
+     },
+     "open_state": "open",
+     "url": "https://amazonappdev2026.devpost.com/",
+     "submission_period_dates": "Aug 31 - Oct 23, 2026",
+     "themes": [
+      {
+       "id": 6,
+       "name": "Machine Learning/AI"
+      },
+      {
+       "id": 22,
+       "name": "Open Ended"
+      },
+      {
+       "id": 11,
+       "name": "Productivity"
+      }
+     ],
+     "prize_amount": "$<span data-currency-value>138,000</span>",
+     "registrations_count": 16056,
+     "featured": true,
+     "organization_name": "Amazon",
+     "invite_only": false
+    },
+    {
+     "id": 30408,
+     "title": "Global Innovation Build Challenge V2",
+     "displayed_location": {
+      "icon": "globe",
+      "location": "Online"
+     },
+     "open_state": "open",
+     "url": "https://gibc-v2.devpost.com/",
+     "submission_period_dates": "Jul 11 - Oct 01, 2026",
+     "themes": [
+      {
+       "id": 6,
+       "name": "Machine Learning/AI"
+      },
+      {
+       "id": 13,
+       "name": "Social Good"
+      },
+      {
+       "id": 23,
+       "name": "Beginner Friendly"
+      }
+     ],
+     "prize_amount": "$<span data-currency-value>0</span>",
+     "registrations_count": 1565,
+     "featured": false,
+     "organization_name": "Kang Chiao International School Student ",
+     "invite_only": false
+    },
+    {
+     "id": 31024,
+     "title": "Meta VR Start Developer Competition 2026",
+     "displayed_location": {
+      "icon": "globe",
+      "location": "Online"
+     },
+     "open_state": "open",
+     "url": "https://start-developer-competition-26.devpost.com/",
+     "submission_period_dates": "Sep 24 - Nov 18, 2026",
+     "themes": [
+      {
+       "id": 5,
+       "name": "AR/VR"
+      },
+      {
+       "id": 6,
+       "name": "Machine Learning/AI"
+      },
+      {
+       "id": 25,
+       "name": "Web"
+      }
+     ],
+     "prize_amount": "$<span data-currency-value>1,000,000</span>",
+     "registrations_count": 601,
+     "featured": false,
+     "organization_name": "Meta",
+     "invite_only": false
+    },
+    {
+     "id": 30740,
+     "title": "Code for Humanity",
+     "displayed_location": {
+      "icon": "globe",
+      "location": "Online"
+     },
+     "open_state": "open",
+     "url": "https://code-for-humanity.devpost.com/",
+     "submission_period_dates": "Jul 16, 2026 - Jan 15, 2027",
+     "themes": [
+      {
+       "id": 19,
+       "name": "Education"
+      },
+      {
+       "id": 6,
+       "name": "Machine Learning/AI"
+      },
+      {
+       "id": 25,
+       "name": "Web"
+      }
+     ],
+     "prize_amount": "$<span data-currency-value>0</span>",
+     "registrations_count": 437,
+     "featured": false,
+     "organization_name": "nill",
+     "invite_only": false
+    },
+    {
+     "id": 31249,
+     "title": "Next Byte Hacks: V4",
+     "displayed_location": {
+      "icon": "globe",
+      "location": "Online"
+     },
+     "open_state": "open",
+     "url": "https://next-byte-hacks-v4.devpost.com/",
+     "submission_period_dates": "Sep 05 - 30, 2026",
+     "themes": [
+      {
+       "id": 23,
+       "name": "Beginner Friendly"
+      },
+      {
+       "id": 19,
+       "name": "Education"
+      },
+      {
+       "id": 6,
+       "name": "Machine Learning/AI"
+      }
+     ],
+     "prize_amount": "$<span data-currency-value>100</span>",
+     "registrations_count": 176,
+     "featured": false,
+     "organization_name": "Next Byte Hacks",
+     "invite_only": false
+    }
+   ],
+   "meta": {
+    "total_count": 11,
+    "per_page": 5
+   }
+  },
+  {
+   "hackathons": [
+    {
+     "id": 30236,
+     "title": "Hack Atlantic",
+     "displayed_location": {
+      "icon": "map-marker-alt",
+      "location": "Fredericton, New Brunswick"
+     },
+     "open_state": "open",
+     "url": "https://hack-atlantic-2026.devpost.com/",
+     "submission_period_dates": "Sep 27, 2026",
+     "themes": [
+      {
+       "id": 23,
+       "name": "Beginner Friendly"
+      },
+      {
+       "id": 2,
+       "name": "DevOps"
+      },
+      {
+       "id": 3,
+       "name": "Fintech"
+      }
+     ],
+     "prize_amount": "$CAD <span data-currency-value>5,000</span>",
+     "registrations_count": 51,
+     "featured": false,
+     "organization_name": "Hack Atlantic",
+     "invite_only": false
+    },
+    {
+     "id": 31493,
+     "title": "DecentraHack 2.0",
+     "displayed_location": {
+      "icon": "globe",
+      "location": "Online"
+     },
+     "open_state": "open",
+     "url": "https://decentrahack-2-0.devpost.com/",
+     "submission_period_dates": "Sep 24 - 30, 2026",
+     "themes": [
+      {
+       "id": 1,
+       "name": "Blockchain"
+      },
+      {
+       "id": 6,
+       "name": "Machine Learning/AI"
+      },
+      {
+       "id": 22,
+       "name": "Open Ended"
+      }
+     ],
+     "prize_amount": "₹ <span data-currency-value>15,000</span>",
+     "registrations_count": 36,
+     "featured": false,
+     "organization_name": "pimpri chinchwad college of engineering",
+     "invite_only": false
+    },
+    {
+     "id": 90001,
+     "title": "Prague AI Hack",
+     "displayed_location": {
+      "icon": "map-marker-alt",
+      "location": "Prague, Czech Republic"
+     },
+     "open_state": "open",
+     "url": "https://prague-ai.devpost.com/",
+     "submission_period_dates": "Aug 31 - Oct 23, 2026",
+     "themes": [
+      {
+       "id": 6,
+       "name": "Machine Learning/AI"
+      },
+      {
+       "id": 22,
+       "name": "Open Ended"
+      },
+      {
+       "id": 11,
+       "name": "Productivity"
+      }
+     ],
+     "prize_amount": "€ <span data-currency-value>12,000</span>",
+     "registrations_count": 16056,
+     "featured": true,
+     "organization_name": "Amazon",
+     "invite_only": false
+    },
+    {
+     "id": 90002,
+     "title": "Austin ML Hack",
+     "displayed_location": {
+      "icon": "map-marker-alt",
+      "location": "Austin, Texas"
+     },
+     "open_state": "open",
+     "url": "https://austin-ml.devpost.com/",
+     "submission_period_dates": "Aug 31 - Oct 23, 2026",
+     "themes": [
+      {
+       "id": 6,
+       "name": "Machine Learning/AI"
+      },
+      {
+       "id": 22,
+       "name": "Open Ended"
+      },
+      {
+       "id": 11,
+       "name": "Productivity"
+      }
+     ],
+     "prize_amount": "$<span data-currency-value>138,000</span>",
+     "registrations_count": 16056,
+     "featured": true,
+     "organization_name": "Amazon",
+     "invite_only": false
+    },
+    {
+     "id": 90003,
+     "title": "Invite Only AI",
+     "displayed_location": {
+      "icon": "globe",
+      "location": "Online"
+     },
+     "open_state": "open",
+     "url": "https://invite-ai.devpost.com/",
+     "submission_period_dates": "Aug 31 - Oct 23, 2026",
+     "themes": [
+      {
+       "id": 6,
+       "name": "Machine Learning/AI"
+      },
+      {
+       "id": 22,
+       "name": "Open Ended"
+      },
+      {
+       "id": 11,
+       "name": "Productivity"
+      }
+     ],
+     "prize_amount": "$<span data-currency-value>138,000</span>",
+     "registrations_count": 16056,
+     "featured": true,
+     "organization_name": "Amazon",
+     "invite_only": true
+    },
+    {
+     "id": 90004,
+     "title": "TBA Dates AI",
+     "displayed_location": {
+      "icon": "globe",
+      "location": "Online"
+     },
+     "open_state": "open",
+     "url": "https://tba-ai.devpost.com/",
+     "submission_period_dates": "Dates TBA",
+     "themes": [
+      {
+       "id": 6,
+       "name": "Machine Learning/AI"
+      },
+      {
+       "id": 22,
+       "name": "Open Ended"
+      },
+      {
+       "id": 11,
+       "name": "Productivity"
+      }
+     ],
+     "prize_amount": "$<span data-currency-value>138,000</span>",
+     "registrations_count": 16056,
+     "featured": true,
+     "organization_name": "Amazon",
+     "invite_only": false
+    }
+   ],
+   "meta": {
+    "total_count": 11,
+    "per_page": 5
+   }
+  }
+ ]
+}
