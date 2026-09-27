@@ -79,7 +79,8 @@ export async function activateGoal(form: FormData): Promise<void> {
 }
 
 export async function runSources(): Promise<void> {
-  await api("/sources/run", { method: "POST" });
+  // network sources + LLM deadline watcher can take minutes, not the default 5 s
+  await api("/sources/run", { method: "POST", signal: AbortSignal.timeout(300_000) });
   refresh();
 }
 

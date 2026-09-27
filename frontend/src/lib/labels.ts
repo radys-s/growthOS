@@ -1,4 +1,4 @@
-import type { DecisionStatus, DeadlineKind, FactorName, ProfileItemKind } from "@/lib/types";
+import type { DecisionStatus, DeadlineKind, FactorName, ProfileItemKind, Tier } from "@/lib/types";
 
 export const KIND_LABELS: Record<string, string> = {
   competition: "Soutěž",
@@ -73,3 +73,32 @@ export const EDUCATION_LABELS: Record<string, string> = {
   master: "Magistr",
   phd: "Doktorand",
 };
+
+export const ORIGIN_LABELS: Record<string, string> = {
+  curated: "Kurátorské",
+  devpost: "Devpost",
+  kaggle: "Kaggle",
+};
+
+export const TIER_TONE: Record<Tier, string> = {
+  S: "emerald",
+  A: "sky",
+  B: "violet",
+  C: "zinc",
+  ignore: "zinc",
+};
+
+/** What to put in backend/.env to switch a source on. */
+export const SOURCE_SETUP_HINT: Record<string, string> = {
+  kaggle: "Doplň KAGGLE_USERNAME a KAGGLE_KEY do backend/.env (kaggle.com → Settings → API).",
+  deadline_watch: "Doplň LLM_BASE_URL (OmniRoute) a LLM_API_KEY do backend/.env a spusť OmniRoute.",
+};
+
+const PRAGUE_TIME = new Intl.DateTimeFormat("cs-CZ", {
+  timeZone: "Europe/Prague",
+  day: "numeric",
+  month: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+export const formatPrague = (iso: string) => PRAGUE_TIME.format(new Date(iso));

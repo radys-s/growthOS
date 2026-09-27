@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { CandidateMeta } from "@/components/Recommendation";
+import { CandidateMeta, DeadlineQuote } from "@/components/Recommendation";
 import { EmptyState } from "@/components/Section";
 import { kindLabel } from "@/lib/labels";
 import type { FilteredItem, RankedItem } from "@/lib/types";
@@ -65,7 +65,8 @@ export function OpportunityList({ ranked, filtered, kind }: Props) {
                   {item.priority.toFixed(2)}
                 </span>
               </div>
-              <CandidateMeta candidate={item.candidate} />
+              <CandidateMeta candidate={item.candidate} tier={item.credential_tier} />
+              <DeadlineQuote candidate={item.candidate} />
               {item.reasons[0] && <p className="text-sm text-zinc-300">{item.reasons[0]}</p>}
               {item.candidate.eligibility && !item.candidate.eligibility.verified && (
                 <p className="text-xs text-amber-300/80">⚠ Podmínky účasti neověřené</p>

@@ -8,8 +8,9 @@ import { HealthBadge } from "@/components/HealthBadge";
 import { OpportunityList } from "@/components/Opportunities";
 import { RecommendationCard } from "@/components/Recommendation";
 import { EmptyState, Section, SectionSkeleton } from "@/components/Section";
+import { SourceList } from "@/components/Sources";
 import { SubmitButton } from "@/components/SubmitButton";
-import { getGaps, getGoals, getRecommendations } from "@/lib/api";
+import { getGaps, getGoals, getRecommendations, getSources } from "@/lib/api";
 
 export default function Dashboard({ searchParams }: PageProps<"/">) {
   const kind = searchParams.then((params) =>
@@ -83,7 +84,10 @@ async function DashboardContent({ kind }: { kind: Promise<string | null> }) {
       </EmptyState>
     );
   }
-  const gaps = await getGaps(recommendations.goal_id);
+  const [gaps, sources] = await Promise.all([
+    getGaps(recommendations.goal_id),
+    getSources().catch(() => null), // the panel is optional; never break the dashboard
+  ]);
   const { novelty } = recommendations;
   const hidden = recommendations.filtered.filter((f) => f.candidate.decision);
 
@@ -110,7 +114,10 @@ async function DashboardContent({ kind }: { kind: Promise<string | null> }) {
             ),
           )}
         </nav>
-        <p className="text-sm text-zinc-400" title="Metrika úspěchu: aspoň 1 nová užitečná věc týdně">
+        <p
+          className="text-sm text-zinc-400"
+          title="Metrika úspěchu: aspoň 1 nová užitečná věc týdně"
+        >
           Za {novelty.window_days} dní:{" "}
           <span className={novelty.new_worthwhile > 0 ? "text-emerald-300" : "text-amber-300"}>
             {novelty.new_worthwhile} nových užitečných
@@ -159,9 +166,22 @@ async function DashboardContent({ kind }: { kind: Promise<string | null> }) {
           )}
         </Section>
 
-        <Section title="Mezery v profilu" subtitle="Pokrytí požadavků cíle, největší mezera nahoře">
-          <GapList gaps={gaps} />
-        </Section>
+        <div className="flex flex-col gap-6">
+          <Section
+            title="Mezery v profilu"
+            subtitle="Pokrytí požadavků cíle, největší mezera nahoře"
+          >
+            <GapList gaps={gaps} />
+          </Section>
+          {sources && (
+            <Section
+              title="Zdroje"
+              subtitle="Odkud příležitosti pocházejí a kdy se naposledy načetly"
+            >
+              <SourceList sources={sources} />
+            </Section>
+          )}
+        </div>
 
         <Section
           className="lg:col-span-3"

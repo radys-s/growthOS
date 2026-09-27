@@ -7,6 +7,7 @@ import type {
   Profile,
   Recommendations,
   Signal,
+  SourceStatus,
 } from "@/lib/types";
 
 export const API_URL = process.env.API_URL ?? "http://127.0.0.1:8000";
@@ -55,7 +56,9 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
 
 export async function getHealth(): Promise<HealthResponse | null> {
   try {
-    return await api<HealthResponse>("/health", { signal: AbortSignal.timeout(3000) });
+    return await api<HealthResponse>("/health", {
+      signal: AbortSignal.timeout(3000),
+    });
   } catch {
     return null;
   }
@@ -77,3 +80,4 @@ export const getGoalTemplates = () => api<GoalTemplate[]>("/goal-templates");
 export const getGaps = (goalId: string) => api<GapItem[]>(`/goals/${goalId}/gaps`);
 export const getProfile = () => api<Profile>("/profile");
 export const getTaxonomy = () => api<Signal[]>("/taxonomy");
+export const getSources = () => api<SourceStatus[]>("/sources");
