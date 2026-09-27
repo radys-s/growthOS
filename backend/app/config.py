@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./growthos.db"
     ai_provider: str = "none"
     cors_origins: str = "http://localhost:3000"
+    scheduler_enabled: bool = True  # weekly source refresh + refresh on startup
 
     @property
     def cors_origin_list(self) -> list[str]:

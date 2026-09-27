@@ -15,8 +15,8 @@ source = **curated YAML only**; **no LLM** in M1 (ADR 0005).
 
 - [x] Design upgrade: signal taxonomy, goal templates, action-centric ranking, deadline honesty (ADR 0005)
 - [x] Persistence: models + migration, Profile/Goal API, seed (taxonomy, templates, example profile)
-- [ ] Curated source adapter + ingestion (upsert by `dedup_key`) + weekly scheduler job
-- [ ] Curated data: real, evidence-backed opportunities + generic growth actions
+- [x] Curated source adapter + ingestion (upsert by `dedup_key`) + weekly scheduler job
+- [x] Curated data: real, evidence-backed opportunities + generic growth actions
 - [ ] Ranking engine per [scoring.md](scoring.md) with unit tests
 - [ ] API: recommendations, gaps, opportunities, decisions
 - [ ] Dashboard: Do next (reasons, factors) · Profile gaps · Opportunities · decision buttons
