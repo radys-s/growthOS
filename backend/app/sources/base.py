@@ -14,6 +14,7 @@ from typing import Protocol, runtime_checkable
 from pydantic import AwareDatetime, BaseModel, Field, HttpUrl, computed_field
 
 from app.common import EducationLevel
+from app.credentials import Credential
 from app.taxonomy import SignalList
 
 
@@ -79,6 +80,9 @@ class NormalizedOpportunity(BaseModel):
     signals: SignalList = Field(default_factory=list)
     cv_signal: int | None = Field(default=None, ge=1, le=5)
     cv_signal_reason: str | None = None
+    credential: Credential | None = Field(
+        default=None, description="Only for kind=certification: type + issuer reputation (tiering)."
+    )
     source: str
     source_ref: str
     evidence_url: HttpUrl

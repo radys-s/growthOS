@@ -79,6 +79,15 @@ def parse_prize_usd(value: str | None) -> float | None:
     return int(match[2].replace(",", "")) * USD_RATES[match[1]]
 
 
+def _cv_signal(prize_usd: float | None, registrations: int | None) -> int:
+    """Big prize pool = strong field and a recognisable result; tiny events barely register."""
+    if prize_usd is not None and prize_usd >= 10_000:
+        return 3
+    if (prize_usd is not None and prize_usd >= 1_000) or (registrations or 0) >= 300:
+        return 2
+    return 1
+
+
 def _in_scope(raw: dict[str, Any]) -> bool:
     if raw.get("open_state") != "open" or raw.get("invite_only"):
         return False
@@ -111,7 +120,7 @@ def to_opportunity(raw: dict[str, Any], now: datetime) -> NormalizedOpportunity:
         eligibility=Eligibility(verified=False),
         location="online" if location.lower() == "online" else location,
         signals=signals,
-        cv_signal=3 if prize is not None and prize >= 10_000 else 2,
+        cv_signal=_cv_signal(prize, registrations),
         cv_signal_reason=reason,
         source="devpost",
         source_ref=str(raw["id"]),

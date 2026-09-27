@@ -32,6 +32,8 @@ class Opportunity(Base):
     signals: Mapped[list[str]] = mapped_column(JSON, default=list)
     cv_signal: Mapped[int | None] = mapped_column(Integer)
     cv_signal_reason: Mapped[str | None] = mapped_column(Text)
+    credential_type: Mapped[str | None] = mapped_column(String(30))
+    issuer_reputation: Mapped[int | None] = mapped_column(Integer)
     source: Mapped[str] = mapped_column(String(50))
     source_ref: Mapped[str] = mapped_column(String(200))
     evidence_url: Mapped[str] = mapped_column(String(500))

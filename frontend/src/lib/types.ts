@@ -26,6 +26,16 @@ export type Eligibility = {
   notes: string | null;
 };
 
+// backend/app/credentials/__init__.py
+export type CredentialType =
+  | "industry_certification"
+  | "skill_badge"
+  | "course_certificate"
+  | "participation_badge";
+export type Credential = { type: CredentialType; issuer_reputation: number };
+export type Tier = "S" | "A" | "B" | "C" | "ignore";
+export type CredentialTier = { tier: Tier; score: number };
+
 // backend/app/ranking/engine.py
 export type FactorName =
   | "relevance"
@@ -40,6 +50,7 @@ export type FactorName =
 export type Candidate = {
   key: string;
   source: "opportunity" | "action";
+  origin: string | null; // source adapter of an opportunity: curated | devpost | kaggle
   target_id: string | null;
   kind: string;
   title: string;
@@ -54,6 +65,7 @@ export type Candidate = {
   cost_eur: number | null;
   deadline: DeadlineInfo | null;
   eligibility: Eligibility | null;
+  credential: Credential | null;
   closed: boolean;
   decision: DecisionStatus | null;
   is_new: boolean;
@@ -66,6 +78,7 @@ export type RankedItem = {
   contributions: Record<FactorName, number>;
   reasons: string[];
   warnings: string[];
+  credential_tier: CredentialTier | null;
 };
 
 export type FilteredItem = { candidate: Candidate; reason: string };

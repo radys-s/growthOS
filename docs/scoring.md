@@ -18,6 +18,7 @@ Candidates = open opportunities (as `apply` actions) + curated growth actions.
 | Country | profile country not in `eligibility.countries` |
 | Cost | `cost_eur > max_cost_eur` |
 | Decision | latest decision is `done`, `skipped` or `not_interested` |
+| Credential value | certification whose credential tier (§6) is `Ignore` — "Nízká hodnota certifikátu pro tvůj cíl". Runs after the factors, because the tier depends on the goal. |
 
 Unknown eligibility **passes** but lowers Probability and adds an "unverified eligibility" warning.
 
@@ -70,7 +71,16 @@ Each ranked item returns:
 
 ## 6. Credential tiers (post-M1)
 
-`tier_score = type_weight × issuer_reputation_norm × goal_fit` with type weights
-industry_certification 1.0 · skill_badge 0.6 · course_certificate 0.35 · participation_badge 0.1;
-S ≥ 0.75, A ≥ 0.55, B ≥ 0.35, C ≥ 0.2, else Ignore. In M1 credentials are curated opportunities
-of kind `certification` whose `cv_signal` already encodes the type.
+Implemented in `backend/app/credentials/__init__.py` (V1).
+
+`tier_score = type_weight × issuer_reputation / 5 × goal_fit`
+
+- Type weights: industry_certification 1.0 · skill_badge 0.6 · course_certificate 0.35 ·
+  participation_badge 0.1.
+- `goal_fit = (relevance + gap_coverage) / 2`, both factors from §2. A credential whose signals are
+  on goal but already covered by the profile is worth half as much.
+- Tiers: S ≥ 0.75, A ≥ 0.55, B ≥ 0.35, C ≥ 0.2, else Ignore. Ignore is a gate (§1).
+
+`credential.type` and `credential.issuer_reputation` (1–5) are curated facts on certification
+opportunities. Items without them get no tier. The tier is shown in the UI; it doesn't change the
+priority, which already contains `cv_signal`.
