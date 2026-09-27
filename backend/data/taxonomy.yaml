@@ -1,0 +1,101 @@
+# Controlled signal vocabulary (ADR 0005).
+# category: skill = something you can learn; evidence = externally visible proof; credential = formal credential.
+# Keep it small. Adding a signal = one entry here; referencing an unknown id is a validation error.
+
+signals:
+  # --- skills ---
+  - id: python
+    label: Python
+    category: skill
+  - id: classical_ml
+    label: Klasické ML (sklearn, boosting)
+    category: skill
+    aliases: [sklearn, scikit-learn, xgboost, lightgbm, catboost, tabular_ml]
+  - id: deep_learning
+    label: Deep learning (PyTorch)
+    category: skill
+    aliases: [pytorch, neural_networks]
+  - id: computer_vision
+    label: Computer vision
+    category: skill
+    aliases: [cv_vision]
+  - id: nlp
+    label: NLP / LLM
+    category: skill
+    aliases: [llm, language_models]
+  - id: data_analysis
+    label: Datová analýza
+    category: skill
+    aliases: [pandas, eda]
+  - id: algorithms
+    label: Algoritmy a datové struktury
+    category: skill
+    aliases: [competitive_programming, dsa]
+  - id: math_foundations
+    label: Matematika pro ML
+    category: skill
+    aliases: [linear_algebra, probability, statistics]
+  - id: deployment
+    label: Nasazení modelů / aplikací
+    category: skill
+    aliases: [model_serving, shipping]
+  - id: mlops
+    label: MLOps (tracking, CI, monitoring)
+    category: skill
+  - id: production_backend
+    label: Produkční backend (API, DB)
+    category: skill
+    aliases: [backend, fastapi, sql]
+  - id: frontend
+    label: Frontend / UI
+    category: skill
+    aliases: [react, nextjs]
+  - id: cloud
+    label: Cloud (AWS / GCP / Azure)
+    category: skill
+  - id: research_methods
+    label: Výzkumné metody (experimenty, psaní)
+    category: skill
+  - id: presentation
+    label: Prezentace a pitch
+    category: skill
+    aliases: [pitching, public_speaking]
+  - id: teamwork
+    label: Týmová práce
+    category: skill
+
+  # --- evidence ---
+  - id: ml_competition_result
+    label: Výsledek v ML soutěži
+    category: evidence
+    aliases: [kaggle_result]
+  - id: olympiad_result
+    label: Výsledek v olympiádě
+    category: evidence
+  - id: hackathon_result
+    label: Výsledek z hackathonu
+    category: evidence
+  - id: research_evidence
+    label: Výzkumný výstup (práce, poster, publikace)
+    category: evidence
+    aliases: [publication, paper]
+  - id: public_portfolio
+    label: Veřejné portfolio projektů
+    category: evidence
+    aliases: [github_portfolio]
+  - id: open_source_contribution
+    label: Open-source příspěvky
+    category: evidence
+  - id: industry_experience
+    label: Praxe ve firmě / stáž
+    category: evidence
+    aliases: [internship_experience]
+  - id: international_experience
+    label: Mezinárodní zkušenost (program, soutěž v zahraničí)
+    category: evidence
+
+  # --- credentials ---
+  - id: recognized_credential
+    label: Uznávaný certifikát
+    category: credential
+    aliases: [certification]

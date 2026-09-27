@@ -13,6 +13,8 @@ from typing import Protocol, runtime_checkable
 
 from pydantic import AwareDatetime, BaseModel, Field, HttpUrl, computed_field
 
+from app.common import EducationLevel
+
 
 class OpportunityKind(StrEnum):
     COMPETITION = "competition"
@@ -25,17 +27,15 @@ class OpportunityKind(StrEnum):
     CERTIFICATION = "certification"
 
 
-class EducationLevel(StrEnum):
-    HIGH_SCHOOL = "high_school"
-    BACHELOR = "bachelor"
-    MASTER = "master"
-    PHD = "phd"
-    ANY = "any"
-
-
 class Eligibility(BaseModel):
-    """Structured eligibility. ``None`` means unknown, never 'no restriction'."""
+    """Structured eligibility.
 
+    ``verified=True``: the rules were checked at the evidence URL; a ``None`` field then means
+    "no restriction". ``verified=False``: ``None`` means unknown and ranking treats the item as
+    unverified (lower probability + warning).
+    """
+
+    verified: bool = False
     min_age: int | None = None
     max_age: int | None = None
     education_levels: list[EducationLevel] | None = None

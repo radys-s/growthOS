@@ -14,7 +14,7 @@ Decisions (2026-09-27): goals **AI/ML internship 2027** + **stronger competition
 source = **curated YAML only**; **no LLM** in M1 (ADR 0005).
 
 - [x] Design upgrade: signal taxonomy, goal templates, action-centric ranking, deadline honesty (ADR 0005)
-- [ ] Persistence: models + migration, Profile/Goal API, seed (taxonomy, templates, example profile)
+- [x] Persistence: models + migration, Profile/Goal API, seed (taxonomy, templates, example profile)
 - [ ] Curated source adapter + ingestion (upsert by `dedup_key`) + weekly scheduler job
 - [ ] Curated data: real, evidence-backed opportunities + generic growth actions
 - [ ] Ranking engine per [scoring.md](scoring.md) with unit tests
