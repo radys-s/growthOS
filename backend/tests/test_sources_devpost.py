@@ -105,10 +105,10 @@ def test_fetch_without_client_fails_loudly() -> None:
 
 def test_http_error_is_reported_per_source(session: Session) -> None:
     report = run_sources(session, NOW, [DevpostSource(_client(PAGES, status=503))])
-    [source] = report.sources
+    source = report.sources[0]
     assert source.status == "error"
     assert "503" in (source.error or "")
-    run = session.scalars(select(SourceRun)).one()
+    run = session.scalars(select(SourceRun).where(SourceRun.source == "devpost")).one()
     assert (run.source, run.status) == ("devpost", "error")
 
 
@@ -136,4 +136,5 @@ def test_not_configured_adapter_is_skipped(session: Session) -> None:
 
     report = run_sources(session, NOW, [Unconfigured(None)])
     assert report.sources[0].status == "not_configured"
-    assert session.scalars(select(SourceRun)).one().status == "not_configured"
+    runs = session.scalars(select(SourceRun).where(SourceRun.source == "unconfigured")).all()
+    assert [r.status for r in runs] == ["not_configured"]

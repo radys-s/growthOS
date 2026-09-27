@@ -5,11 +5,13 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.opportunities.deadlines import deadline_info
+from app.opportunities.deadlines import opportunity_deadline
 from app.opportunities.models import GrowthAction, Opportunity
 from app.opportunities.schemas import OpportunityOut
 from app.sources.base import Eligibility, NormalizedOpportunity
 from app.sources.curated import CuratedAction
+
+EXTRACTED = "extracted"  # deadline found by the deadline watcher (ADR 0006)
 
 
 class UpsertResult(BaseModel):
@@ -28,6 +30,8 @@ def _values(item: NormalizedOpportunity) -> dict[str, Any]:
         "url": str(item.url),
         "description": item.description,
         "deadline_at": item.deadline_at,
+        "deadline_source": "source" if item.deadline_at else None,
+        "deadline_quote": None,
         "recurrence": item.recurrence.value if item.recurrence else None,
         "last_known_deadline": item.last_known_deadline,
         "starts_at": item.starts_at,
@@ -41,9 +45,22 @@ def _values(item: NormalizedOpportunity) -> dict[str, Any]:
         "cv_signal": item.cv_signal,
         "cv_signal_reason": item.cv_signal_reason,
         "evidence_url": str(item.evidence_url),
+        "watch_url": str(item.watch_url) if item.watch_url else None,
         "dedup_key": item.dedup_key,
         "status": "open",
     }
+
+
+def _keep_extracted(row: Opportunity, values: dict[str, Any]) -> dict[str, Any]:
+    """A verified extracted deadline survives snapshots that simply don't publish one."""
+    if row.deadline_source == EXTRACTED and values["deadline_at"] is None:
+        return {
+            **values,
+            "deadline_at": row.deadline_at,
+            "deadline_source": EXTRACTED,
+            "deadline_quote": row.deadline_quote,
+        }
+    return values
 
 
 def upsert_opportunities(
@@ -81,9 +98,12 @@ def upsert_opportunities(
             session.add(row)
             result.created += 1
         else:
+            values = _keep_extracted(row, values)
             changed = {k: v for k, v in values.items() if getattr(row, k) != v}
             for key, value in changed.items():
                 setattr(row, key, value)
+            if "watch_url" in changed:
+                row.watch_hash = None  # new page → check it again
             row.fetched_at = item.fetched_at
             if changed:
                 result.updated += 1
@@ -139,7 +159,7 @@ def to_out(row: Opportunity, now: datetime) -> OpportunityOut:
         organizer=row.organizer,
         url=row.url,
         description=row.description,
-        deadline=deadline_info(row.deadline_at, row.recurrence, row.last_known_deadline, now),
+        deadline=opportunity_deadline(row, now),
         starts_at=row.starts_at,
         ends_at=row.ends_at,
         eligibility=Eligibility.model_validate(row.eligibility or {}),

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.decisions.service import latest_decisions
 from app.goals.models import Goal
-from app.opportunities.deadlines import deadline_info
+from app.opportunities.deadlines import opportunity_deadline
 from app.opportunities.models import GrowthAction, Opportunity
 from app.opportunities.service import list_active_actions, list_open_opportunities
 from app.profile.models import Profile
@@ -89,7 +89,7 @@ def _opportunity_candidate(
         difficulty=row.difficulty,
         est_hours=row.est_hours,
         cost_eur=row.cost_eur,
-        deadline=deadline_info(row.deadline_at, row.recurrence, row.last_known_deadline, now),
+        deadline=opportunity_deadline(row, now),
         eligibility=Eligibility.model_validate(row.eligibility or {}),
         closed=row.status != "open",
         decision=decisions.get(key),

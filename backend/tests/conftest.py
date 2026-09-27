@@ -3,6 +3,8 @@ import os
 os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["SCHEDULER_ENABLED"] = "false"
 os.environ["SOURCES_ENABLED"] = "curated"  # network sources are tested with fixtures
+for _key in ("KAGGLE_USERNAME", "KAGGLE_KEY", "LLM_BASE_URL", "LLM_API_KEY"):
+    os.environ[_key] = ""  # never reach real services from tests, whatever backend/.env says
 
 from collections.abc import Iterator  # noqa: E402
 
