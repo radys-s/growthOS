@@ -47,6 +47,13 @@ cd frontend && npm install && npm run dev
 
 Open http://localhost:3000.
 
+On Windows, `start.ps1` does all of it (migrations, both servers in their own windows, opens the
+browser):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start.ps1
+```
+
 With Docker instead of native Postgres: `docker compose up -d db`.
 
 ## OneDrive note
