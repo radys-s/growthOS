@@ -1,0 +1,144 @@
+{
+ "pages": [
+  [
+   {
+    "id": 1001,
+    "ref": "https://www.kaggle.com/competitions/image-matching-challenge",
+    "title": "Image Matching Challenge",
+    "url": "https://www.kaggle.com/competitions/image-matching-challenge",
+    "description": "Image Matching Challenge description",
+    "organizationName": "Google",
+    "category": "Featured",
+    "reward": "$50,000",
+    "deadline": "2026-12-01T23:59:00Z",
+    "teamCount": 1200,
+    "userHasEntered": false,
+    "tags": [
+     {
+      "ref": "image",
+      "name": "image"
+     },
+     {
+      "ref": "computer vision",
+      "name": "computer vision"
+     }
+    ],
+    "enabledDate": "2026-08-01T00:00:00Z"
+   },
+   {
+    "id": 1002,
+    "ref": "https://www.kaggle.com/competitions/playground-series-s6e10",
+    "title": "Playground Series S6E10",
+    "url": "https://www.kaggle.com/competitions/playground-series-s6e10",
+    "description": "Playground Series S6E10 description",
+    "organizationName": null,
+    "category": "Playground",
+    "reward": "Swag",
+    "deadline": "2026-10-31T23:59:00Z",
+    "teamCount": 1200,
+    "userHasEntered": false,
+    "tags": [
+     {
+      "ref": "tabular",
+      "name": "tabular"
+     },
+     {
+      "ref": "regression",
+      "name": "regression"
+     }
+    ],
+    "enabledDate": "2026-08-01T00:00:00Z"
+   },
+   {
+    "id": 1003,
+    "ref": "https://www.kaggle.com/competitions/titanic",
+    "title": "Titanic",
+    "url": "https://www.kaggle.com/competitions/titanic",
+    "description": "Titanic description",
+    "organizationName": null,
+    "category": "Getting Started",
+    "reward": "Knowledge",
+    "deadline": "2030-01-01T00:00:00Z",
+    "teamCount": 1200,
+    "userHasEntered": false,
+    "tags": [
+     {
+      "ref": "tabular",
+      "name": "tabular"
+     },
+     {
+      "ref": "beginner",
+      "name": "beginner"
+     }
+    ],
+    "enabledDate": "2026-08-01T00:00:00Z"
+   }
+  ],
+  [
+   {
+    "id": 1004,
+    "ref": "https://www.kaggle.com/competitions/llm-science-exam",
+    "title": "LLM Science Exam",
+    "url": "https://www.kaggle.com/competitions/llm-science-exam",
+    "description": "LLM Science Exam description",
+    "organizationName": null,
+    "category": "Research",
+    "reward": "$50,000",
+    "deadline": "2026-11-15T23:59:00Z",
+    "teamCount": 1200,
+    "userHasEntered": false,
+    "tags": [
+     {
+      "ref": "nlp",
+      "name": "nlp"
+     },
+     {
+      "ref": "text generation",
+      "name": "text generation"
+     }
+    ],
+    "enabledDate": "2026-08-01T00:00:00Z"
+   },
+   {
+    "id": 1005,
+    "ref": "https://www.kaggle.com/competitions/old-finished",
+    "title": "Old Finished",
+    "url": "https://www.kaggle.com/competitions/old-finished",
+    "description": "Old Finished description",
+    "organizationName": null,
+    "category": "Featured",
+    "reward": "$50,000",
+    "deadline": "2026-09-01T23:59:00Z",
+    "teamCount": 1200,
+    "userHasEntered": false,
+    "tags": [
+     {
+      "ref": "tabular",
+      "name": "tabular"
+     }
+    ],
+    "enabledDate": "2026-08-01T00:00:00Z"
+   },
+   {
+    "id": 1006,
+    "ref": "https://www.kaggle.com/competitions/no-deadline",
+    "title": "No Deadline",
+    "url": "https://www.kaggle.com/competitions/no-deadline",
+    "description": "No Deadline description",
+    "organizationName": null,
+    "category": "Community",
+    "reward": "$50,000",
+    "deadline": null,
+    "teamCount": 1200,
+    "userHasEntered": false,
+    "tags": [
+     {
+      "ref": "tabular",
+      "name": "tabular"
+     }
+    ],
+    "enabledDate": "2026-08-01T00:00:00Z"
+   }
+  ]
+ ]
+}
