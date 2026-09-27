@@ -14,6 +14,7 @@ from app.sources.base import SourceAdapter
 from app.sources.curated import CuratedSource, load_curated_actions
 from app.sources.devpost import DevpostSource
 from app.sources.http import make_client
+from app.sources.kaggle import KaggleSource
 from app.sources.models import SourceRun
 
 logger = logging.getLogger("growthos.sources")
@@ -47,7 +48,11 @@ class SourceStatus(BaseModel):
 
 def all_adapters(settings: Settings, client: httpx.Client | None) -> list[SourceAdapter]:
     """Every known adapter, enabled or not. ``client`` is None when only listing them."""
-    return [CuratedSource(), DevpostSource(client)]
+    return [
+        CuratedSource(),
+        DevpostSource(client),
+        KaggleSource(client, settings.kaggle_username, settings.kaggle_key),
+    ]
 
 
 def default_adapters(settings: Settings, client: httpx.Client) -> list[SourceAdapter]:
