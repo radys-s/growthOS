@@ -6,8 +6,10 @@ import {
   FACTOR_LABELS,
   FACTOR_ORDER,
   kindLabel,
+  ORIGIN_LABELS,
+  TIER_TONE,
 } from "@/lib/labels";
-import type { Candidate, DecisionStatus, RankedItem } from "@/lib/types";
+import type { Candidate, CredentialTier, DecisionStatus, RankedItem } from "@/lib/types";
 
 const BUTTONS: DecisionStatus[] = ["planned", "done", "skipped", "not_interested", "already_knew"];
 
@@ -27,17 +29,58 @@ export function Badge({ children, tone = "zinc" }: { children: React.ReactNode; 
   );
 }
 
-export function CandidateMeta({ candidate }: { candidate: Candidate }) {
+export function TierBadge({ tier }: { tier: CredentialTier | null }) {
+  if (!tier || tier.tier === "ignore") return null;
+  return (
+    <span title={`Hodnota certifikátu pro tvůj cíl (skóre ${tier.score.toFixed(2)})`}>
+      <Badge tone={TIER_TONE[tier.tier]}>Tier {tier.tier}</Badge>
+    </span>
+  );
+}
+
+export function DeadlineQuote({ candidate }: { candidate: Candidate }) {
+  const deadline = candidate.deadline;
+  if (!deadline?.quote) return null;
+  return (
+    <p className="text-xs text-zinc-400">
+      <span className="text-emerald-300">✓ Termín ověřen citací ze stránky:</span> „{deadline.quote}
+      “
+      {deadline.quote_url && (
+        <>
+          {" "}
+          <a
+            href={deadline.quote_url}
+            target="_blank"
+            rel="noreferrer"
+            className="text-zinc-500 underline hover:text-zinc-300"
+          >
+            zdroj
+          </a>
+        </>
+      )}
+    </p>
+  );
+}
+
+export function CandidateMeta({
+  candidate,
+  tier = null,
+}: {
+  candidate: Candidate;
+  tier?: CredentialTier | null;
+}) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400">
       <Badge>{kindLabel(candidate.kind)}</Badge>
+      {candidate.origin && candidate.origin !== "curated" && (
+        <Badge tone="sky">{ORIGIN_LABELS[candidate.origin] ?? candidate.origin}</Badge>
+      )}
+      <TierBadge tier={tier} />
       {candidate.is_new && <Badge tone="emerald">Nové</Badge>}
       {candidate.decision === "planned" && <Badge tone="sky">Naplánováno</Badge>}
       {candidate.decision === "already_knew" && <Badge tone="violet">Už znám</Badge>}
       {candidate.deadline && (
-        <span className={DEADLINE_TONE[candidate.deadline.kind]}>
-          ⏱ {candidate.deadline.label}
-        </span>
+        <span className={DEADLINE_TONE[candidate.deadline.kind]}>⏱ {candidate.deadline.label}</span>
       )}
       {candidate.est_hours !== null && <span>~{candidate.est_hours} h</span>}
       {candidate.cost_eur !== null && (
@@ -130,8 +173,9 @@ export function RecommendationCard({ item, rank }: { item: RankedItem; rank: num
               candidate.title
             )}
           </h3>
-          <div className="mt-1">
-            <CandidateMeta candidate={candidate} />
+          <div className="mt-1 flex flex-col gap-1">
+            <CandidateMeta candidate={candidate} tier={item.credential_tier} />
+            <DeadlineQuote candidate={candidate} />
           </div>
           {item.reasons.length > 0 && (
             <ul className="mt-3 space-y-1 text-sm text-zinc-200">

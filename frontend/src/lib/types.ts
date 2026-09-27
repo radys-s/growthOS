@@ -28,10 +28,7 @@ export type Eligibility = {
 
 // backend/app/credentials/__init__.py
 export type CredentialType =
-  | "industry_certification"
-  | "skill_badge"
-  | "course_certificate"
-  | "participation_badge";
+  "industry_certification" | "skill_badge" | "course_certificate" | "participation_badge";
 export type Credential = { type: CredentialType; issuer_reputation: number };
 export type Tier = "S" | "A" | "B" | "C" | "ignore";
 export type CredentialTier = { tier: Tier; score: number };
@@ -145,12 +142,7 @@ export type Signal = {
 // backend/app/profile/schemas.py
 export type EducationLevel = "high_school" | "bachelor" | "master" | "phd";
 export type ProfileItemKind =
-  | "project"
-  | "competition"
-  | "achievement"
-  | "certification"
-  | "experience"
-  | "publication";
+  "project" | "competition" | "achievement" | "certification" | "experience" | "publication";
 
 export type ProfileSkill = { signal: string; level: number };
 
@@ -177,4 +169,17 @@ export type Profile = {
   weekly_hours_budget: number | null;
   skills: ProfileSkill[];
   items: ProfileItem[];
+};
+
+// backend/app/sources/runner.py
+export type SourceRunStatus = "ok" | "error" | "not_configured";
+export type SourceStatus = {
+  id: string;
+  name: string;
+  enabled: boolean;
+  configured: boolean;
+  last_run: string | null;
+  last_status: SourceRunStatus | null;
+  last_error: string | null;
+  last_fetched: number | null;
 };
