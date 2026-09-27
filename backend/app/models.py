@@ -4,6 +4,7 @@ from app.decisions.models import Decision
 from app.goals.models import Goal
 from app.opportunities.models import GrowthAction, Opportunity
 from app.profile.models import Profile, ProfileItem, ProfileSkill
+from app.sources.models import SourceRun
 
 __all__ = [
     "Decision",
@@ -13,4 +14,5 @@ __all__ = [
     "Profile",
     "ProfileItem",
     "ProfileSkill",
+    "SourceRun",
 ]
