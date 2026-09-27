@@ -305,3 +305,160 @@
   credential:
     type: industry_certification
     issuer_reputation: 5
+
+# --- V1 additions (researched 2026-09-27) ---------------------------------------------------
+
+- id: otevrena-veda-staz
+  kind: internship
+  title: Otevřená věda — roční vědecká stáž pro středoškoláky (AV ČR)
+  organizer: Akademie věd ČR
+  url: https://www.otevrenaveda.cz/cs/staze-pro-studenty/
+  evidence_url: https://www.otevrenaveda.cz/cs/staze-pro-studenty/informace-pro-studenty/
+  watch_url: https://www.otevrenaveda.cz/cs/staze-pro-studenty/
+  description: >
+    Roční stáž na pracovišti Akademie věd pod vedením vědce (leden–listopad, min. 6–8 h měsíčně),
+    přes 100 témat včetně IT. Zdarma, s proplácením cestovného a certifikátem o absolvování.
+    Přihlašování probíhá každý listopad na další rok (ročník 2026: do 30. 11. 2025) — vyber si
+    téma s ML / zpracováním dat.
+  deadline_at: null
+  recurrence: yearly
+  last_known_deadline: 2025-11-30
+  eligibility:
+    verified: true
+    education_levels: [high_school]
+    countries: [CZ]
+    notes: Studenti SŠ z celé ČR (i maturanti pokračující ve studiu).
+  cost_eur: 0
+  location: pracoviště AV ČR (dle tématu)
+  difficulty: 3
+  est_hours: 80
+  signals: [research_evidence, research_methods, industry_experience, presentation]
+  cv_signal: 4
+  cv_signal_reason: Skutečná výzkumná zkušenost ve vědecké instituci s doporučením vedoucího.
+
+- id: nachytej-ai
+  kind: competition
+  title: Nachytej AI — soutěž školních projektů s umělou inteligencí
+  organizer: O2 Chytrá škola / Scio
+  url: https://www.nachytejai.cz/
+  evidence_url: https://www.nachytejai.cz/
+  watch_url: https://www.nachytejai.cz/
+  description: >
+    Týmy 3–6 studentů (2. stupeň ZŠ a SŠ) vytvoří vzdělávací projekt s AI a hledají její chyby.
+    Tým registruje učitel. Ročník 2026 běžel 2. 3. – 30. 4. 2026, vyhlášení na Maker Faire Prague.
+    Další ročník zatím nevyhlášen.
+  deadline_at: null
+  recurrence: yearly
+  last_known_deadline: 2026-04-30
+  eligibility:
+    verified: true
+    education_levels: [high_school]
+    countries: [CZ]
+    team_size_min: 3
+    team_size_max: 6
+    notes: Tým musí zaregistrovat učitel.
+  cost_eur: 0
+  location: online (školní týmy)
+  difficulty: 2
+  est_hours: 20
+  signals: [teamwork, presentation, public_portfolio]
+  cv_signal: 2
+  cv_signal_reason: Školní soutěž — dobrý start pro týmový projekt, slabší signál pro stáž.
+
+- id: azure-ai-fundamentals-ai-901
+  kind: certification
+  title: Microsoft Certified — Azure AI Fundamentals (AI-901)
+  organizer: Microsoft
+  url: https://learn.microsoft.com/en-us/credentials/certifications/azure-ai-fundamentals/
+  evidence_url: https://learn.microsoft.com/en-us/credentials/certifications/exams/ai-901/
+  description: >
+    Fundamentals zkouška (nahradila AI-900): AI koncepty + implementace AI řešení v Microsoft
+    Foundry, vyžaduje základy Pythonu. Cena podle země (orientačně ~100 USD); studenti často
+    dostávají slevové vouchery — ověř před registrací.
+  deadline_at: null
+  recurrence: rolling
+  eligibility:
+    verified: false
+  cost_eur: null
+  location: online (proctored) / testovací centrum
+  difficulty: 2
+  est_hours: 20
+  signals: [cloud, recognized_credential, python]
+  cv_signal: 2
+  cv_signal_reason: Uznávaný vydavatel, ale jen fundamentals úroveň.
+  credential:
+    type: industry_certification
+    issuer_reputation: 5
+
+- id: google-skill-badge-ml-apis
+  kind: certification
+  title: Google Cloud skill badge — Prepare Data for ML APIs on Google Cloud
+  organizer: Google Cloud
+  url: https://www.skills.google/course_templates/631
+  evidence_url: https://www.skills.google/course_templates/631
+  description: >
+    Hands-on skill badge (introductory): Dataprep, Dataflow, Spark a volání ML API (Natural
+    Language, Speech-to-Text, Video Intelligence). Badge se získá splněním challenge labu;
+    kredity / cena na platformě se mění — ověř.
+  deadline_at: null
+  recurrence: rolling
+  eligibility:
+    verified: false
+  cost_eur: null
+  location: online
+  difficulty: 2
+  est_hours: 8
+  signals: [cloud, data_analysis, deployment, recognized_credential]
+  cv_signal: 2
+  cv_signal_reason: Praktický ověřený lab od Google, sdílitelný badge (Credly).
+  credential:
+    type: skill_badge
+    issuer_reputation: 4
+
+- id: nvidia-dli-satellite-imagery
+  kind: certification
+  title: NVIDIA DLI — Disaster Risk Monitoring Using Satellite Imagery
+  organizer: NVIDIA Deep Learning Institute
+  url: https://www.nvidia.com/en-gb/training/online/
+  evidence_url: https://www.nvidia.com/en-gb/training/online/
+  description: >
+    Bezplatný self-paced kurz (~8 h) s GPU laby: segmentace satelitních snímků hlubokým učením,
+    zakončený certifikátem. Nabídka zdarma kurzů se mění — ověř v katalogu DLI.
+  deadline_at: null
+  recurrence: rolling
+  eligibility:
+    verified: false
+  cost_eur: 0
+  location: online
+  difficulty: 3
+  est_hours: 8
+  signals: [deep_learning, computer_vision, python]
+  cv_signal: 2
+  cv_signal_reason: Certifikát o absolvování od NVIDIA s praktickými laby.
+  credential:
+    type: course_certificate
+    issuer_reputation: 4
+
+- id: kaggle-learn-intro-deep-learning
+  kind: certification
+  title: Kaggle Learn — Intro to Deep Learning
+  organizer: Kaggle
+  url: https://www.kaggle.com/learn/intro-to-deep-learning
+  evidence_url: https://www.kaggle.com/learn/intro-to-deep-learning
+  description: >
+    Krátký bezplatný kurz s cvičeními v noteboocích (Keras), po dokončení certifikát na profilu.
+    Rychlý most k Kaggle soutěžím.
+  deadline_at: null
+  recurrence: rolling
+  eligibility:
+    verified: false
+  cost_eur: 0
+  location: online
+  difficulty: 2
+  est_hours: 5
+  signals: [deep_learning, python]
+  cv_signal: 1
+  cv_signal_reason: Certifikát o dokončení kurzu — hodnota je hlavně v dovednosti, ne v papíru.
+  credential:
+    type: course_certificate
+    issuer_reputation: 3
