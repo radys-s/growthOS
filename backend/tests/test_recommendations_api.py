@@ -107,3 +107,17 @@ def test_decision_validation(seeded: TestClient) -> None:
     item = seeded.get("/recommendations").json()["top"][0]["candidate"]
     bad = {"target_type": item["source"], "target_id": item["target_id"], "status": "maybe"}
     assert seeded.post("/decisions", json=bad).status_code == 422
+
+
+def test_undo_decision(seeded: TestClient) -> None:
+    item = seeded.get("/recommendations").json()["top"][0]["candidate"]
+    target = f"/decisions/{item['source']}/{item['target_id']}"
+    assert seeded.delete(target).status_code == 404
+    seeded.post(
+        "/decisions",
+        json={"target_type": item["source"], "target_id": item["target_id"], "status": "skipped"},
+    )
+    assert seeded.delete(target).status_code == 204
+    body = seeded.get("/recommendations").json()
+    back = next(i for i in body["ranked"] if i["candidate"]["key"] == item["key"])
+    assert back["candidate"]["decision"] is None

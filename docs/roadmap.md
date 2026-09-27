@@ -6,7 +6,7 @@
 - [x] Backend skeleton (FastAPI, SQLAlchemy, Alembic, `/health`, source adapter contract)
 - [x] Frontend skeleton (dashboard with three empty sections)
 
-## Milestone 1 — Vertical slice (in progress)
+## Milestone 1 — Vertical slice ✅ (built 2026-09-27, exit criterion awaiting Tomáš's review)
 
 > Profile + goal → curated opportunities → rank → Top 5 with explanation → decide.
 
@@ -19,12 +19,15 @@ source = **curated YAML only**; **no LLM** in M1 (ADR 0005).
 - [x] Curated data: real, evidence-backed opportunities + generic growth actions
 - [x] Ranking engine per [scoring.md](scoring.md) with unit tests
 - [x] API: recommendations, gaps, opportunities, decisions
-- [ ] Dashboard: Do next (reasons, factors) · Profile gaps · Opportunities · decision buttons
-- [ ] Profile page: skills, items, goal selection
-- [ ] E2E verification in browser
+- [x] Dashboard: Do next (reasons, factors) · Profile gaps · Opportunities · decision buttons
+- [x] Profile page: skills, items, goal selection
+- [x] E2E verification in browser
 
 **Exit criterion:** for one real goal, Top 5 is something I'd actually act on, and at least one item
-is new to me.
+is new to me. → Tomáš checks this on the real profile; tune weights/curated data if not.
+
+Known M1 limits: single user, no auth (local only); curated data needs manual weekly review;
+all curated eligibility is unverified; decisions can be undone but have no history view.
 
 ## Later (only after M1 works well)
 

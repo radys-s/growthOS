@@ -10,7 +10,23 @@ Competitions, olympiads, hackathons, internships, research programs, scholarship
 certifications and strong technical projects — ranked by what actually moves *my* profile toward
 *my* goal, with an explanation for every recommendation.
 
-**Status:** Milestone 0 (bootstrap) done. Next: [Milestone 1 vertical slice](docs/roadmap.md).
+**Status:** Milestone 1 vertical slice built — profile + goal → curated opportunities and growth
+actions → deterministic ranking → Top 5 with reasons, factor breakdown and decision buttons.
+See [roadmap](docs/roadmap.md).
+
+## How it works (M1)
+
+- **Profile** (`/profile`): skills 0–4 and evidence items, both tagged with signals from
+  [`backend/data/taxonomy.yaml`](backend/data/taxonomy.yaml).
+- **Goal** from a template in [`backend/data/goal_templates/`](backend/data/goal_templates/):
+  required signals with importance + factor weights → **gaps**.
+- **Sources:** hand-curated, evidence-backed YAML in [`backend/data/curated/`](backend/data/curated/).
+  Refreshed on backend start, weekly (Mon 05:00 UTC) and via *Načíst zdroje*. Unknown deadlines
+  stay unknown; recurring events show an *expected* date, never an invented official one.
+- **Ranking** ([spec](docs/scoring.md)): hard gates → 8 factors → weighted priority → Top 5 with
+  max 2 of a kind. Every number is shown under *Proč právě tohle?*.
+- **Decisions:** planned / done / skipped / not interested / already knew (undo in *Rozhodnuté*).
+  The header shows the weekly metric: new worthwhile items in the last 7 days.
 
 ## Docs
 
