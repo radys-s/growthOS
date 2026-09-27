@@ -1,4 +1,4 @@
-"""Source adapter contract (ADR 0004).
+"""Source adapter contract (ADR 0004, 0005).
 
 Every external or curated source implements ``SourceAdapter`` and returns
 ``NormalizedOpportunity`` items. Adapters are pure: they fetch and normalize,
@@ -14,6 +14,7 @@ from typing import Protocol, runtime_checkable
 from pydantic import AwareDatetime, BaseModel, Field, HttpUrl, computed_field
 
 from app.common import EducationLevel
+from app.taxonomy import SignalList
 
 
 class OpportunityKind(StrEnum):
@@ -27,6 +28,11 @@ class OpportunityKind(StrEnum):
     CERTIFICATION = "certification"
 
 
+class Recurrence(StrEnum):
+    YEARLY = "yearly"
+    ROLLING = "rolling"
+
+
 class Eligibility(BaseModel):
     """Structured eligibility.
 
@@ -36,12 +42,12 @@ class Eligibility(BaseModel):
     """
 
     verified: bool = False
-    min_age: int | None = None
-    max_age: int | None = None
+    min_age: int | None = Field(default=None, ge=0)
+    max_age: int | None = Field(default=None, ge=0)
     education_levels: list[EducationLevel] | None = None
     countries: list[str] | None = Field(default=None, description="ISO 3166-1 alpha-2 codes")
-    team_size_min: int | None = None
-    team_size_max: int | None = None
+    team_size_min: int | None = Field(default=None, ge=1)
+    team_size_max: int | None = Field(default=None, ge=1)
     notes: str | None = None
 
 
@@ -57,7 +63,11 @@ class NormalizedOpportunity(BaseModel):
     url: HttpUrl
     description: str | None = None
     deadline_at: AwareDatetime | None = Field(
-        default=None, description="UTC. None = deadline not published, never guessed."
+        default=None, description="UTC. Only when officially published; never guessed."
+    )
+    recurrence: Recurrence | None = None
+    last_known_deadline: AwareDatetime | None = Field(
+        default=None, description="Previous edition's deadline (evidence-backed)."
     )
     starts_at: AwareDatetime | None = None
     ends_at: AwareDatetime | None = None
@@ -66,7 +76,9 @@ class NormalizedOpportunity(BaseModel):
     location: str = "online"
     difficulty: int | None = Field(default=None, ge=1, le=5)
     est_hours: int | None = Field(default=None, ge=0)
-    skills_taught: list[str] = Field(default_factory=list)
+    signals: SignalList = Field(default_factory=list)
+    cv_signal: int | None = Field(default=None, ge=1, le=5)
+    cv_signal_reason: str | None = None
     source: str
     source_ref: str
     evidence_url: HttpUrl

@@ -1,0 +1,67 @@
+# Curated growth actions: things to DO that close gaps no external opportunity covers.
+# Hand-written, not generated. Signals must exist in taxonomy.yaml.
+
+- id: deploy-model-api
+  kind: build
+  title: Nasaď svůj ML model jako veřejné API s demo stránkou
+  description: >
+    Vezmi existující model (např. z IOAI přípravy), zabal ho do FastAPI, nasaď (Render / Fly.io /
+    HF Spaces) a přidej jednoduché demo UI + README s metrikami.
+  signals: [deployment, production_backend, public_portfolio, mlops]
+  est_hours: 15
+  difficulty: 2
+  cv_signal: 3
+  cv_signal_reason: Nasazený funkční projekt je přesně to, co recruiter na AI stáž hledá.
+
+- id: publish-ioai-writeups
+  kind: publish
+  title: Zveřejni řešení IOAI mock úloh jako repo s writeupem
+  description: >
+    Čisté repo: problém, baseline, co fungovalo a co ne, výsledné metriky. Ukazuje ML myšlení.
+  signals: [public_portfolio, deep_learning, research_methods]
+  est_hours: 8
+  difficulty: 1
+  cv_signal: 3
+  cv_signal_reason: Veřejný důkaz schopností místo tvrzení v CV.
+
+- id: competition-writeup
+  kind: publish
+  title: Sepiš technický writeup ke svému nejlepšímu soutěžnímu řešení
+  description: Blog / PDF ve stylu krátkého paperu — feature engineering, validace, ablace.
+  signals: [research_evidence, public_portfolio, research_methods]
+  est_hours: 10
+  difficulty: 2
+  cv_signal: 2
+  cv_signal_reason: Mění umístění v soutěži na čitelný výzkumný výstup.
+
+- id: open-source-first-pr
+  kind: build
+  title: Pošli první PR do ML knihovny (good first issue)
+  description: scikit-learn, Hugging Face, PyTorch ekosystém — dokumentace nebo malý bugfix.
+  signals: [open_source_contribution, python, teamwork]
+  est_hours: 12
+  difficulty: 3
+  cv_signal: 3
+  cv_signal_reason: Mergnutý PR do známé knihovny je ověřitelný signál spolupráce a kvality kódu.
+
+- id: mlops-tracking-ci
+  kind: build
+  title: Přidej do projektu experiment tracking a CI
+  description: MLflow nebo W&B pro experimenty, GitHub Actions s testy a lintem.
+  signals: [mlops, deployment]
+  est_hours: 8
+  difficulty: 2
+  cv_signal: 2
+  cv_signal_reason: Ukazuje produkční návyky, ale sám o sobě nevyčnívá.
+
+- id: research-lab-outreach
+  kind: apply
+  title: Napiš 3 výzkumným skupinám o letní stáž (CIIRC, ÚFAL MFF, …)
+  description: >
+    Krátký e-mail s odkazy na nejlepší projekty a konkrétním zájmem o jejich práci.
+    CIIRC ČVUT v minulosti vypisoval letní studentské stáže.
+  signals: [industry_experience, research_evidence]
+  est_hours: 4
+  difficulty: 3
+  cv_signal: 4
+  cv_signal_reason: Stáž ve výzkumné skupině je silná praxe a často vede k výzkumnému výstupu.

@@ -13,7 +13,9 @@ from app.common import utcnow
 from app.config import get_settings
 from app.db import check_database, engine
 from app.goals.router import router as goals_router
+from app.opportunities.router import router as opportunities_router
 from app.profile.router import router as profile_router
+from app.scheduler import refresh_sources, start_scheduler
 from app.seed import run as run_seed
 
 logger = logging.getLogger("growthos")
@@ -27,7 +29,16 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         logger.info("seed: %s", run_seed())
     except Exception:
         logger.exception("startup seed failed (is the database migrated?)")
+    scheduler = None
+    if get_settings().scheduler_enabled:
+        try:
+            refresh_sources()
+        except Exception:
+            logger.exception("startup source refresh failed")
+        scheduler = start_scheduler()
     yield
+    if scheduler is not None:
+        scheduler.shutdown(wait=False)
 
 
 app = FastAPI(title="growthOS", description=app_doc, version="0.1.0", lifespan=lifespan)
@@ -41,6 +52,7 @@ app.add_middleware(
 
 app.include_router(profile_router)
 app.include_router(goals_router)
+app.include_router(opportunities_router)
 
 
 class HealthResponse(BaseModel):

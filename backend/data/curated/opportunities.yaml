@@ -1,0 +1,293 @@
+# Curated opportunities (ADR 0005). Researched 2026-09-27 via web search.
+#
+# Rules:
+# - deadline_at ONLY when officially published for the upcoming edition. Otherwise null.
+# - recurring events: recurrence + last_known_deadline (previous edition, from evidence_url).
+# - eligibility.verified: true only when the rules were checked at the source; unknown stays null.
+# - Dates without time = 23:59 Europe/Prague. Review this file weekly.
+
+- id: ceska-ai-olympiada
+  kind: olympiad
+  title: Česká AI Olympiáda
+  organizer: NVIAS
+  url: https://www.aiolympiada.cz/
+  evidence_url: https://asociace.ai/ceska-ai-olympiada-2026-prvni-narodni-soutez-v-umele-inteligenci-pro-stredoskolaky/
+  description: >
+    Národní soutěž v AI pro středoškoláky a oficiální cesta do české reprezentace na IOAI.
+    Kategorie AI Tech (ML úlohy v Pythonu, formát IOAI) a AI Startup (tým 3 lidí).
+    Ročník 2026: krajské kolo v květnu, národní finále 22. 6. 2026 v Plzni.
+    Termín registrace na další ročník zatím nezveřejněn — hlídej aiolympiada.cz.
+  deadline_at: null
+  recurrence: yearly
+  last_known_deadline: null
+  eligibility:
+    verified: false
+    education_levels: [high_school]
+    countries: [CZ]
+  cost_eur: null
+  location: Česko (krajská kola + finále)
+  difficulty: 4
+  est_hours: 40
+  signals: [olympiad_result, ml_competition_result, deep_learning, classical_ml, python]
+  cv_signal: 5
+  cv_signal_reason: Jediná nominační soutěž na IOAI; umístění je silný a srozumitelný signál.
+
+- id: ioai-2027
+  kind: olympiad
+  title: IOAI 2027 — International Olympiad in Artificial Intelligence
+  organizer: IOAI
+  url: https://ioai-official.org/
+  evidence_url: https://ioai-official.org/ioai-community-meeting-highlights-september-2026/
+  description: >
+    4.–10. 7. 2027 v Singapuru. Od 2027 jeden národní tým za zemi; národní výběry musí skončit
+    do 1. 4. 2027, týmy uzavřené do 15. 4. 2027. Česko nominuje přes Českou AI Olympiádu.
+  deadline_at: null
+  starts_at: 2027-07-04
+  ends_at: 2027-07-10
+  recurrence: yearly
+  eligibility:
+    verified: false
+    education_levels: [high_school]
+    notes: Nominace přes národní výběr (Česká AI Olympiáda).
+  cost_eur: null
+  location: Singapur
+  difficulty: 5
+  est_hours: 120
+  signals: [olympiad_result, international_experience, deep_learning, classical_ml, computer_vision, nlp]
+  cv_signal: 5
+  cv_signal_reason: Mezinárodní olympiáda — medaile je top signál pro AI stáže i zahraniční VŠ.
+
+- id: mo-kategorie-p
+  kind: olympiad
+  title: Matematická olympiáda — kategorie P (programování)
+  organizer: MFF UK / Matematická olympiáda
+  url: https://mo.mff.cuni.cz/p/
+  evidence_url: https://mo.mff.cuni.cz/p/
+  description: >
+    Programátorská olympiáda pro středoškoláky, cesta na IOI a CEOI. Domácí kolo (4 úlohy)
+    se odevzdává přes web; v ročníku 2025/26 do 15. 11. 2025. Termín pro 2026/27 ověř na webu.
+  deadline_at: null
+  recurrence: yearly
+  last_known_deadline: 2025-11-15
+  eligibility:
+    verified: false
+    education_levels: [high_school]
+    countries: [CZ]
+  cost_eur: 0
+  location: online (domácí kolo), pak krajské a ústřední kolo
+  difficulty: 4
+  est_hours: 20
+  signals: [olympiad_result, algorithms, math_foundations]
+  cv_signal: 4
+  cv_signal_reason: Tradiční olympiáda s cestou na IOI; úspěšný řešitel ÚK je známý signál.
+
+- id: kasiopea
+  kind: competition
+  title: Kasiopea — programátorská soutěž
+  organizer: MFF UK
+  url: https://kasiopea.matfyz.cz/
+  evidence_url: https://kasiopea.matfyz.cz/
+  description: >
+    Online programátorská soutěž pro středoškoláky. Domácí kolo ročníku 2025/26 proběhlo
+    22. 11. – 7. 12. 2025, pak finále. Dobrá rozcvička na olympiádu i pohovory.
+  deadline_at: null
+  recurrence: yearly
+  last_known_deadline: 2025-12-07
+  eligibility:
+    verified: false
+    education_levels: [high_school]
+  cost_eur: 0
+  location: online
+  difficulty: 3
+  est_hours: 10
+  signals: [algorithms, python, olympiad_result]
+  cv_signal: 3
+  cv_signal_reason: Známá česká soutěž, menší prestiž než olympiáda.
+
+- id: soc
+  kind: competition
+  title: Středoškolská odborná činnost (SOČ) — obor informatika
+  organizer: NPI ČR / SOČ
+  url: https://www.soc.cz/
+  evidence_url: https://www.soc.cz/aktualni-rocnik/
+  description: >
+    Vlastní odborná práce + obhajoba. Školní kola bývají v únoru (termín určuje škola),
+    pak krajské a celostátní kolo; nejlepší práce postupují na mezinárodní soutěže (EUCYS, ISEF).
+    Ideální místo, kde z projektu udělat výzkumný výstup.
+  deadline_at: null
+  recurrence: yearly
+  last_known_deadline: null
+  eligibility:
+    verified: false
+    education_levels: [high_school]
+    countries: [CZ]
+  cost_eur: 0
+  location: škola → kraj → celostátní kolo
+  difficulty: 3
+  est_hours: 150
+  signals: [research_evidence, research_methods, presentation, public_portfolio]
+  cv_signal: 4
+  cv_signal_reason: Doložitelný výzkumný výstup s obhajobou; postup výš je silný signál.
+
+- id: cern-beamline-for-schools
+  kind: competition
+  title: CERN Beamline for Schools
+  organizer: CERN
+  url: https://beamlineforschools.cern/
+  evidence_url: https://beamlineforschools.cern/how-to-take-part/
+  description: >
+    Týmová soutěž středoškoláků — návrh experimentu na urychlovači; vítězové jedou do CERN/DESY.
+    Deadline ročníku 2026 byl 13. 3. 2026 (23:59 SELČ); termín 2027 zatím nezveřejněn.
+    AI/data část (analýza dat z detektorů) je dobrá niche pro ML profil.
+  deadline_at: null
+  recurrence: yearly
+  last_known_deadline: 2026-03-13T21:59:00Z
+  eligibility:
+    verified: false
+    education_levels: [high_school]
+    notes: Tým studentů s dospělým koučem — přesná pravidla v terms and conditions.
+  cost_eur: 0
+  location: online přihláška, finále v CERN / DESY
+  difficulty: 4
+  est_hours: 40
+  signals: [research_evidence, research_methods, teamwork, international_experience, data_analysis]
+  cv_signal: 5
+  cv_signal_reason: CERN brand + mezinárodní výběr; i shortlist je zajímavý výsledek.
+
+- id: kaggle-playground-series
+  kind: competition
+  title: Kaggle Playground Series (měsíční soutěže)
+  organizer: Kaggle
+  url: https://www.kaggle.com/competitions?hostSegmentIdFilter=8
+  evidence_url: https://www.kaggle.com/competitions/playground-series
+  description: >
+    Každý měsíc nová tabulková soutěž. Nízká prestiž, ale rychlý trénink pipeline
+    a možnost vybudovat si Kaggle rank. Aktuální díl ověř na Kaggle.
+  deadline_at: null
+  recurrence: rolling
+  eligibility:
+    verified: false
+  cost_eur: 0
+  location: online
+  difficulty: 2
+  est_hours: 10
+  signals: [ml_competition_result, classical_ml, data_analysis, python]
+  cv_signal: 2
+  cv_signal_reason: Playground je tréninková liga — vidět je až top umístění nebo Kaggle rank.
+
+- id: junction-2026
+  kind: hackathon
+  title: Junction 2026 (Espoo, Finsko)
+  organizer: Junction
+  url: https://2026.hackjunction.com/
+  evidence_url: https://2026.hackjunction.com/
+  description: >
+    Největší evropský hackathon, 13.–15. 11. 2026, Hype Areena v Espoo. Účast zdarma po přijetí
+    přihlášky; cesta se platí zvlášť. Nezletilí potřebují souhlas rodiče. Deadline přihlášek ověř.
+  deadline_at: null
+  starts_at: 2026-11-13
+  ends_at: 2026-11-15
+  eligibility:
+    verified: false
+    notes: Přijetí na základě přihlášky; pod 18 let souhlas zákonného zástupce.
+  cost_eur: 0
+  location: Espoo, Finsko
+  difficulty: 3
+  est_hours: 48
+  signals: [hackathon_result, teamwork, presentation, production_backend, international_experience]
+  cv_signal: 3
+  cv_signal_reason: Známá značka; hodnotu dělá až umístění nebo hotový produkt z hackathonu.
+
+- id: wolfram-summer-research-program
+  kind: program
+  title: Wolfram Summer Research Program (high school)
+  organizer: Wolfram Research
+  url: https://education.wolfram.com/summer-research-high-school/
+  evidence_url: https://education.wolfram.com/summer-research-high-school/admission/
+  description: >
+    Letní výzkumný program pro středoškoláky (~80 přijatých), přijímá i zahraniční studenty,
+    need-based stipendia. Přihlášky na 2027 se otevírají na podzim 2026; v cyklu 2026 byl
+    early deadline 18. 1. a regular 22. 3.
+  deadline_at: null
+  recurrence: yearly
+  last_known_deadline: 2026-03-22
+  eligibility:
+    verified: false
+    education_levels: [high_school]
+  cost_eur: null
+  location: USA / online dle ročníku
+  difficulty: 4
+  est_hours: 80
+  signals: [research_evidence, research_methods, international_experience, math_foundations]
+  cv_signal: 4
+  cv_signal_reason: Mentorovaný výzkumný projekt s výstupem — cenné pro zahraniční VŠ i stáže.
+
+- id: rsi-research-science-institute
+  kind: program
+  title: Research Science Institute (RSI) — MIT
+  organizer: Center for Excellence in Education
+  url: https://www.cee.org/programs/apply-rsi
+  evidence_url: https://www.cee.org/programs/research-science-institute-rsi/rsi-application-faqs
+  description: >
+    Nejprestižnější letní výzkumný program pro středoškoláky. Jen pro předposlední ročník SŠ,
+    16 let do 1. 7. roku programu. Zahraniční studenti jen přes partnerskou organizaci v zemi —
+    ověř, zda má Česko partnera. Deadline bývá v první polovině prosince.
+  deadline_at: null
+  recurrence: yearly
+  last_known_deadline: null
+  eligibility:
+    verified: false
+    education_levels: [high_school]
+    min_age: 16
+    notes: Jen junior (předposlední ročník); zahraniční jen přes národního partnera CEE.
+  cost_eur: 0
+  location: MIT, Cambridge (USA)
+  difficulty: 5
+  est_hours: 60
+  signals: [research_evidence, research_methods, international_experience, math_foundations]
+  cv_signal: 5
+  cv_signal_reason: Top-tier výběrový program; přijetí samo o sobě je výjimečný signál.
+
+- id: letni-skola-aplikovane-ai-cvut
+  kind: summer_school
+  title: Letní škola aplikované umělé inteligence (ČVUT FS)
+  organizer: ČVUT Fakulta strojní + Vzdělání budoucnosti
+  url: https://www.fsid.cvut.cz/aktuality/3287-212/letni-skola-aplikovane-umele-inteligence
+  evidence_url: https://www.fsid.cvut.cz/aktuality/3287-212/letni-skola-aplikovane-umele-inteligence
+  description: >
+    Pro nadané středoškoláky, kteří umí Python. Ročník 2026 proběhl 3.–7. 8. 2026 v Dejvicích.
+    Hlídej vypsání dalšího ročníku.
+  deadline_at: null
+  recurrence: yearly
+  eligibility:
+    verified: false
+    education_levels: [high_school]
+    countries: [CZ]
+  cost_eur: null
+  location: Praha
+  difficulty: 2
+  est_hours: 20
+  signals: [deep_learning, python, teamwork]
+  cv_signal: 2
+  cv_signal_reason: Užitečné pro kontakty a učení, navenek jen participační signál.
+
+- id: aws-certified-ai-practitioner
+  kind: certification
+  title: AWS Certified AI Practitioner (AIF-C01)
+  organizer: Amazon Web Services
+  url: https://aws.amazon.com/certification/certified-ai-practitioner/
+  evidence_url: https://aws.amazon.com/certification/certified-ai-practitioner/
+  description: >
+    Základní (foundational) certifikace AWS pro AI/ML, zkouška 100 USD, 65 otázek / 90 min.
+    Věkové podmínky zkoušky ověř u AWS / Pearson VUE.
+  deadline_at: null
+  recurrence: rolling
+  eligibility:
+    verified: false
+  cost_eur: 95
+  location: online / testovací centrum
+  difficulty: 2
+  est_hours: 25
+  signals: [cloud, recognized_credential]
+  cv_signal: 2
+  cv_signal_reason: Průmyslová, ale jen foundational certifikace — pro AI stáž malý přírůstek.

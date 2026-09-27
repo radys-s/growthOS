@@ -1,6 +1,7 @@
 import os
 
 os.environ["DATABASE_URL"] = "sqlite://"
+os.environ["SCHEDULER_ENABLED"] = "false"
 
 from collections.abc import Iterator  # noqa: E402
 
