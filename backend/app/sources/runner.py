@@ -1,6 +1,7 @@
 """Runs all enabled source adapters and syncs curated actions into the database."""
 
 import logging
+import threading
 from datetime import datetime
 
 import httpx
@@ -24,6 +25,9 @@ logger = logging.getLogger("growthos.sources")
 WATCH_ID = "deadline_watch"
 WATCH_NAME = "Hlídač deadlinů (LLM + ověřená citace)"
 _DEFAULT = object()
+# The startup/weekly job and POST /sources/run may overlap; two concurrent snapshots of the same
+# source would race on inserts (unique dedup_key), so runs are serialized in-process.
+_RUN_LOCK = threading.Lock()
 
 
 class SourceReport(BaseModel):
@@ -118,6 +122,16 @@ def run_sources(
 ) -> RunReport:
     """Fetch every source, then let the deadline watcher enrich items (ADR 0006).
     ``adapters``/``provider`` override the configured ones (tests)."""
+    with _RUN_LOCK:
+        return _run_sources(session, now, adapters, provider)
+
+
+def _run_sources(
+    session: Session,
+    now: datetime,
+    adapters: list[SourceAdapter] | None,
+    provider: LLMProvider | None | object,
+) -> RunReport:
     settings = get_settings()
     watch: WatchReport | None = None
     with make_client() as client:

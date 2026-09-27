@@ -39,12 +39,12 @@ no Redis/Celery, no multi-agent architecture until a concrete need proves otherw
 | `profile/` | Profile, skills, profile items (projects, competitions, achievements, certs, experience) |
 | `goals/` | Goals and their required signals / factor weights |
 | `opportunities/` | Stored normalized opportunities, dedup, lifecycle (open/closed/expired) |
-| `sources/` | Source adapters (`base.py` contract), curated YAML adapter, ingestion |
+| `sources/` | Source adapters (`base.py` contract): curated YAML, Devpost, Kaggle; runner + `source_runs`; deadline watcher (ADR 0006) |
 | `taxonomy` | Controlled signal vocabulary + goal templates loaded from `backend/data/` (ADR 0005) |
 | `ranking/` | Deterministic factor computation + Priority Score + explanations |
 | `recommendations/` | Builds "Do next" (top N actions) from ranked opportunities + growth actions |
 | `credentials/` | Credential type classification and S/A/B/C/Ignore tiering |
-| `ai/` | LLM provider interface; used for extraction and reasoning, never final scoring |
+| `ai/` | LLM provider interface + OpenAI-compatible client (OmniRoute); extraction only, never scoring |
 
 Rules:
 
@@ -55,10 +55,14 @@ Rules:
 
 ## Data flow (V1 vertical slice)
 
-1. Scheduler (or manual trigger) runs each enabled source adapter.
-2. Adapter returns `NormalizedOpportunity` items (see `app/sources/base.py`).
-3. `opportunities/` upserts by `dedup_key`, keeps `fetched_at` and evidence URL.
-4. `ranking/` builds candidates (opportunities as `apply` actions + curated growth actions),
+1. A scheduler job (startup + weekly) or a manual trigger runs each enabled source adapter. Runs are
+   serialized, and each writes a `source_runs` row.
+2. The adapter returns `NormalizedOpportunity` items (see `app/sources/base.py`).
+3. `opportunities/` upserts by `dedup_key` and keeps `fetched_at` and the evidence URL. Items
+   missing from a source's snapshot are closed.
+4. The deadline watcher checks each `watch_url` and stores only deadlines backed by a verbatim quote
+   (ADR 0006).
+5. `ranking/` builds candidates (opportunities as `apply` actions + curated growth actions),
    applies hard gates, computes factors against the goal's required signals and profile coverage.
-5. `recommendations/` picks a diverse Top N with reasons/warnings → `/recommendations` endpoint.
-6. Dashboard shows Do next · Opportunities · Profile gaps.
+6. `recommendations/` picks a diverse Top N with reasons/warnings → `/recommendations` endpoint.
+7. The dashboard shows Do next · Opportunities · Profile gaps · Sources.
