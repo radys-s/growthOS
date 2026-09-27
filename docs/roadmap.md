@@ -6,21 +6,22 @@
 - [x] Backend skeleton (FastAPI, SQLAlchemy, Alembic, `/health`, source adapter contract)
 - [x] Frontend skeleton (dashboard with three empty sections)
 
-## Milestone 1 — Vertical slice (next)
+## Milestone 1 — Vertical slice (in progress)
 
-> Profile + goal → real opportunities from 2–3 sources → normalize → rank → Top 5 with explanation.
+> Profile + goal → curated opportunities → rank → Top 5 with explanation → decide.
 
-- [ ] Confirm data model ([data-model.md](data-model.md)) → first real migration
-- [ ] Profile + Goal CRUD API (manual input) + simple forms in UI
-- [ ] Source: **curated YAML** (`backend/data/curated/*.yaml`) — olympiads, IOAI, SOČ, summer schools, programs
-- [ ] Source: **Kaggle competitions** (official API)
-- [ ] Source: **Devpost hackathons** (public listing JSON)
-- [ ] Upsert + dedup by `dedup_key`
-- [ ] Ranking: hard gates + factors + priority per [scoring.md](scoring.md), unit-tested
-- [ ] `/recommendations?goal_id=…` → Top 5 with explanation lines
-- [ ] Dashboard: Do next · Opportunities · Profile gaps filled from API
-- [ ] Decision buttons: done / planned / skip / not interested / **already knew**
-- [ ] Weekly run via APScheduler
+Decisions (2026-09-27): goals **AI/ML internship 2027** + **stronger competition profile**;
+source = **curated YAML only**; **no LLM** in M1 (ADR 0005).
+
+- [x] Design upgrade: signal taxonomy, goal templates, action-centric ranking, deadline honesty (ADR 0005)
+- [ ] Persistence: models + migration, Profile/Goal API, seed (taxonomy, templates, example profile)
+- [ ] Curated source adapter + ingestion (upsert by `dedup_key`) + weekly scheduler job
+- [ ] Curated data: real, evidence-backed opportunities + generic growth actions
+- [ ] Ranking engine per [scoring.md](scoring.md) with unit tests
+- [ ] API: recommendations, gaps, opportunities, decisions
+- [ ] Dashboard: Do next (reasons, factors) · Profile gaps · Opportunities · decision buttons
+- [ ] Profile page: skills, items, goal selection
+- [ ] E2E verification in browser
 
 **Exit criterion:** for one real goal, Top 5 is something I'd actually act on, and at least one item
 is new to me.
@@ -34,7 +35,6 @@ is new to me.
 
 ## Open questions
 
-1. Which 2–3 goals to model first? (proposal: AI/ML internship 2027, stronger competition profile)
-2. Curated source ownership: who adds entries and how often (proposal: YAML in repo, reviewed weekly)?
-3. Kaggle API needs a Kaggle token — OK to use Tomáš's own account token locally (`.env`)?
-4. LLM provider for extraction in M1 — needed at all, or rule-based extraction first? (proposal: none in M1)
+1. Kaggle token + Devpost adapter — after M1 (decided 2026-09-27).
+2. Which LLM provider for extraction once rules stop being enough (OmniRoute free model vs Claude API)?
+3. Curated data review cadence — proposal: weekly, together with the dashboard check.

@@ -1,122 +1,118 @@
-# Data model (draft for V1)
+# Data model (Milestone 1)
 
-Draft — to be confirmed before the first migration with real tables.
-All `*_at` columns are UTC. IDs are UUIDs. Enums stored as strings (portable across Postgres/SQLite).
+All `*_at` columns are UTC (timezone-aware on read, also on SQLite). IDs are UUIDs.
+Enums are stored as strings; lists/dicts as `JSON` (portable across Postgres/SQLite, ADR 0002).
 
-## Profile
+## Core idea: signals
 
-Single user in V1, but keep `profile_id` foreign keys so multi-profile is not a rewrite.
+Everything is matched through a **controlled signal taxonomy** (`backend/data/taxonomy.yaml`, ADR 0005).
+A *signal* is something a strong profile can show: a skill (`deployment`, `deep_learning`),
+evidence (`ml_competition_result`, `research_evidence`) or a credential (`recognized_credential`).
+
+- Goals **require** signals (with importance 1–3).
+- The profile **has** signals (skills with level, items with strength).
+- Opportunities and growth actions **provide** signals.
+
+Gap analysis and relevance are then plain set arithmetic — deterministic, explainable, no fuzzy text matching.
+
+## Profile (single user in M1)
 
 | Field | Type | Notes |
 |---|---|---|
 | id | uuid | |
 | name | str | |
-| birth_date | date? | needed for age-based eligibility |
-| country | str | ISO 3166-1 alpha-2, e.g. `CZ` |
-| education_level | enum | `high_school`, `bachelor`, `master`, … |
+| birth_date | date? | age gates; unknown → gate passes as "unverified" |
+| country | str | ISO 3166-1 alpha-2 (`CZ`) |
+| education_level | enum | `high_school`, `bachelor`, `master`, `phd` |
 | graduation_year | int? | |
-| max_cost_eur | int? | hard gate for paid opportunities |
-| weekly_hours_budget | int? | used by Effort penalty |
+| max_cost_eur | int? | hard gate for paid items |
+| weekly_hours_budget | int? | Effort penalty (default 10 h) |
 
-## Skill
+### ProfileSkill
 
-| Field | Type | Notes |
-|---|---|---|
-| profile_id | fk | |
-| name | str | normalized (e.g. `pytorch`, `fastapi`) |
-| level | int 0–4 | none / basic / working / strong / expert |
-| evidence_item_id | fk? | ProfileItem proving it |
+`{ signal, level 0–4 }` — none / basic / working / strong / expert. Unique per (profile, signal).
 
-## ProfileItem
-
-Everything that is *evidence* on a CV.
+### ProfileItem — evidence on the CV
 
 | Field | Type | Notes |
 |---|---|---|
 | kind | enum | `project`, `competition`, `achievement`, `certification`, `experience`, `publication` |
-| title, description | str | |
-| result | str? | e.g. "81st / 5000", "Gold" |
-| skills | list[str] | |
-| url | str? | GitHub, certificate, leaderboard |
-| started_at, finished_at | date? | |
-| signal_strength | int 0–4 | how strong it looks externally (manual in V1) |
+| title, description, result, url | str | result e.g. "81st / 5000" |
+| signals | list[signal] | what the item proves |
+| strength | int 0–4 | how strong it looks externally |
+| date | date? | |
+
+**Coverage** of signal `s` = `max(skill_level(s), max strength of items proving s) / 4` ∈ [0, 1].
 
 ## Goal
 
+Instantiated from a **goal template** (`backend/data/goal_templates/*.yaml`), then editable.
+
 | Field | Type | Notes |
 |---|---|---|
-| title | str | e.g. "AI/ML internship summer 2027" |
-| kind | enum | `internship`, `university_abroad`, `competition_profile`, `research`, `custom` |
+| template_id | str | e.g. `ai_ml_internship` |
+| title | str | |
 | target_date | date? | |
-| required_signals | list[RequiredSignal] | what a strong profile for this goal contains |
-| weights | dict | per-factor weights, see [scoring.md](scoring.md) |
+| required_signals | list[{signal, importance 1–3}] | |
+| weights | dict[factor → float] | see [scoring.md](scoring.md) |
 | active | bool | |
 
-`RequiredSignal` = `{ name, category, importance 1–3 }`, e.g. `{ "deployment", "skill", 2 }`,
-`{ "research evidence", "publication", 3 }`. **Gaps** = required signals not covered by profile items/skills.
+**Gap** of required signal `s` = `importance(s) × (1 − coverage(s))`.
 
-## Opportunity
+## Opportunity (from sources)
 
 | Field | Type | Notes |
 |---|---|---|
 | kind | enum | `competition`, `olympiad`, `hackathon`, `internship`, `scholarship`, `program`, `summer_school`, `certification` |
-| title, organizer, description | str | |
-| url | str | canonical page |
-| deadline_at | datetime? | `null` = not published (never guessed) |
+| title, organizer, description, url | str | |
+| deadline_at | datetime? | **only when officially published** |
+| recurrence | enum? | `yearly`, `rolling` — for events that repeat |
+| last_known_deadline | datetime? | previous edition's deadline (evidence-backed) |
 | starts_at, ends_at | datetime? | |
-| eligibility | Eligibility | structured, see below |
-| cost_eur | int? | 0 = free, `null` = unknown |
-| location | str | `online` or city/country |
+| eligibility | JSON | `{min_age, max_age, education_levels, countries, team_size_min/max, notes}`, `null` = unknown |
+| cost_eur | int? | 0 free, `null` unknown |
+| location | str | `online` or place |
 | difficulty | int 1–5? | |
 | est_hours | int? | |
-| skills_taught | list[str] | |
-| source | str | adapter id |
-| source_ref | str | id in the source |
+| signals | list[signal] | what doing it provides |
+| cv_signal | int 1–5? | curated external prestige |
+| cv_signal_reason | str? | one-line rationale |
+| source, source_ref | str | adapter id + id in source |
 | evidence_url | str | where the facts come from |
 | fetched_at | datetime | |
-| dedup_key | str | normalized title + organizer + deadline date |
-| status | enum | `open`, `closed`, `expired`, `unknown` |
+| dedup_key | str (unique) | normalized title + organizer + deadline date |
+| status | enum | `open`, `closed` |
 
-`Eligibility` = `{ min_age?, max_age?, education_levels?: [...], countries?: [...], team_size?: [min,max], notes? }`.
-Unknown fields stay `null` and are shown as "unknown", never assumed to pass or fail.
+Deadline display: `deadline_at` → exact date · else `recurrence + last_known_deadline` → "expected ~<month>, not yet published" · else "deadline not published".
 
-## GrowthAction
+## GrowthAction (non-opportunity actions)
 
-An action the user can take; may or may not be backed by an Opportunity.
+Curated generic actions that close gaps no external opportunity covers (e.g. "Deploy a model as a public API").
+Loaded from `backend/data/curated/actions.yaml`.
 
 | Field | Type | Notes |
 |---|---|---|
-| kind | enum | `apply`, `build`, `learn`, `certify`, `publish`, `obtain_credential` |
-| title | str | |
-| opportunity_id | fk? | for `apply` / `certify` |
-| covers_signals | list[str] | which RequiredSignals it addresses |
+| kind | enum | `build`, `learn`, `certify`, `publish`, `apply` |
+| title, description | str | |
+| signals | list[signal] | |
 | est_hours | int? | |
-| origin | enum | `source`, `manual`, `suggested` |
+| difficulty | int 1–5? | |
+| cv_signal, cv_signal_reason | | as above |
+| source_ref | str (unique) | |
 
-## Credential
+Every open Opportunity is ranked as an implicit `apply` action, so both types share one ranking.
 
-Classification layer for certifications/badges.
-
-| Field | Type | Notes |
-|---|---|---|
-| name, issuer | str | |
-| type | enum | `industry_certification`, `skill_badge`, `course_certificate`, `participation_badge` |
-| issuer_reputation | int 1–5 | curated |
-| proctored | bool? | |
-| cost_eur, est_hours | int? | |
-
-Tier (S/A/B/C/Ignore) is computed per profile+goal, not stored as a fixed attribute.
-
-## ActionDecision
-
-History of what the user did with a recommendation — feeds the success metric.
+## Decision
 
 | Field | Type | Notes |
 |---|---|---|
-| action_id / opportunity_id | fk | |
-| decision | enum | `done`, `planned`, `skipped`, `not_interested`, `already_knew` |
+| item_type | enum | `opportunity`, `action` |
+| item_id | uuid | |
+| decision | enum | `planned`, `done`, `skipped`, `not_interested`, `already_knew` |
 | note | str? | |
-| decided_at | datetime | |
+| decided_at | datetime | latest decision per item wins |
 
-Weekly success metric = count of recommendations shown that were **not** `already_knew`
-and ended as `planned` or `done`.
+Effect on ranking: `done`, `skipped`, `not_interested` → hidden; `planned` → shown with badge;
+`already_knew` → shown, excluded from the novelty metric.
+
+**Weekly novelty metric** = items decided `planned`/`done` in the last 7 days that were *not* marked `already_knew`.
