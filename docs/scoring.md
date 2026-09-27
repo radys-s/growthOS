@@ -31,7 +31,7 @@ Unknown eligibility **passes** but lowers Probability and adds an "unverified el
 | **Skill Gain** | mean of `1 − cov(s)` over skill-category signals in `S` | no skill signals → 0 |
 | **Probability** | `certainty × clamp(0.5 + 0.5·readiness − 0.15·(difficulty − 3), 0.1, 1)`, `readiness` = mean `cov(s)` over `S`; `certainty` = 1, or 0.7 if any eligibility field is unknown | difficulty 3 |
 | **Urgency** | official deadline: 1 if ≤ 7 days, linear to 0 at ≥ 90 days · expected (recurring): same curve on the next projected date × 0.5 · none: 0.2 | 0.2 |
-| **Effort** *(penalty)* | `est_hours / (4 × weekly_hours_budget)`, clamped | 0.3 |
+| **Effort** *(penalty)* | `est_hours / (4 × weekly_hours_budget)`, clamped; budget defaults to 5 h/week | 0.3 |
 | **Cost** *(penalty)* | 0 if free, else `cost_eur / max_cost_eur` (or `/200` without a limit), clamped | 0.2 |
 
 Projected date for recurring items = `last_known_deadline` moved forward by whole years until it is in the future.
@@ -54,14 +54,17 @@ Weights come from the goal (template defaults below, editable per goal). Each we
 ## 4. Top N and diversity
 
 Sort by priority (ties: earlier deadline, then title). Greedy pick for Top N (default 5) with
-**max 2 items of the same kind**. The full ranked list is returned as well.
+**max 2 items of the same kind**; if that leaves the list short, it is backfilled from the
+ranked list. The full ranked list is returned as well.
 
 ## 5. Explanations
 
 Each ranked item returns:
 
 - `factors` — all factor values, `contributions` — weighted terms,
-- `reasons` — up to 3 sentences from the largest positive contributions
+- `reasons` — up to 3 sentences from the largest positive contributions (≥ 0.02), quoted only if
+  the factor itself is high (relevance ≥ 0.3, gap ≥ 0.2, CV ≥ 0.5, skill ≥ 0.3,
+  probability ≥ 0.6, urgency ≥ 0.5)
   (e.g. "Pokrývá tvoje mezery: deployment, research evidence"),
 - `warnings` — e.g. unverified eligibility, deadline not published, paid.
 
