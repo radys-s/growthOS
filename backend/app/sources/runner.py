@@ -8,16 +8,22 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.ai.provider import LLMProvider, get_provider
 from app.config import Settings, get_settings
 from app.opportunities.service import UpsertResult, sync_actions, upsert_opportunities
 from app.sources.base import SourceAdapter
 from app.sources.curated import CuratedSource, load_curated_actions
+from app.sources.deadline_watch import WatchReport, watch_deadlines
 from app.sources.devpost import DevpostSource
 from app.sources.http import make_client
 from app.sources.kaggle import KaggleSource
 from app.sources.models import SourceRun
 
 logger = logging.getLogger("growthos.sources")
+
+WATCH_ID = "deadline_watch"
+WATCH_NAME = "Hlídač deadlinů (LLM + ověřená citace)"
+_DEFAULT = object()
 
 
 class SourceReport(BaseModel):
@@ -31,6 +37,7 @@ class SourceReport(BaseModel):
 class RunReport(BaseModel):
     ran_at: datetime
     sources: list[SourceReport]
+    deadline_watch: WatchReport | None = None
     actions: int | None = None
     actions_error: str | None = None
 
@@ -81,10 +88,38 @@ def _record(session: Session, report: SourceReport, now: datetime) -> None:
     session.commit()
 
 
+def _run_watch(
+    session: Session, provider: LLMProvider | None, client: httpx.Client, now: datetime
+) -> tuple[SourceReport, WatchReport | None]:
+    report = SourceReport(source=WATCH_ID)
+    if provider is None:
+        report.status = "not_configured"
+        return report, None
+    try:
+        watch = watch_deadlines(session, provider, client, now)
+    except Exception as exc:
+        session.rollback()
+        logger.exception("deadline watch failed")
+        report.status = "error"
+        report.error = str(exc)[:500]
+        return report, None
+    report.fetched = watch.checked
+    report.result = UpsertResult(updated=watch.extracted, unchanged=watch.unchanged)
+    if watch.errors:
+        report.error = "; ".join(watch.errors)[:500]
+    return report, watch
+
+
 def run_sources(
-    session: Session, now: datetime, adapters: list[SourceAdapter] | None = None
+    session: Session,
+    now: datetime,
+    adapters: list[SourceAdapter] | None = None,
+    provider: LLMProvider | None | object = _DEFAULT,
 ) -> RunReport:
+    """Fetch every source, then let the deadline watcher enrich items (ADR 0006).
+    ``adapters``/``provider`` override the configured ones (tests)."""
     settings = get_settings()
+    watch: WatchReport | None = None
     with make_client() as client:
         selected = adapters if adapters is not None else default_adapters(settings, client)
         reports: list[SourceReport] = []
@@ -105,7 +140,12 @@ def run_sources(
             _record(session, report, now)
             reports.append(report)
 
-    run = RunReport(ran_at=now, sources=reports)
+        llm = get_provider(settings, client) if provider is _DEFAULT else provider
+        watch_report, watch = _run_watch(session, llm, client, now)  # type: ignore[arg-type]
+        _record(session, watch_report, now)
+        reports.append(watch_report)
+
+    run = RunReport(ran_at=now, sources=reports, deadline_watch=watch)
     try:
         run.actions = sync_actions(session, load_curated_actions())
     except Exception as exc:
@@ -118,19 +158,24 @@ def run_sources(
 def source_statuses(session: Session) -> list[SourceStatus]:
     settings = get_settings()
     statuses: list[SourceStatus] = []
-    for adapter in all_adapters(settings, None):
+    entries = [
+        (a.id, a.name, a.id in settings.enabled_sources, _is_configured(a))
+        for a in all_adapters(settings, None)
+    ]
+    entries.append((WATCH_ID, WATCH_NAME, True, bool(settings.llm_base_url.strip())))
+    for source_id, name, enabled, configured in entries:
         last = session.scalars(
             select(SourceRun)
-            .where(SourceRun.source == adapter.id)
+            .where(SourceRun.source == source_id)
             .order_by(SourceRun.ran_at.desc())
             .limit(1)
         ).first()
         statuses.append(
             SourceStatus(
-                id=adapter.id,
-                name=adapter.name,
-                enabled=adapter.id in settings.enabled_sources,
-                configured=_is_configured(adapter),
+                id=source_id,
+                name=name,
+                enabled=enabled,
+                configured=configured,
                 last_run=last.ran_at if last else None,
                 last_status=last.status if last else None,
                 last_error=last.error if last else None,

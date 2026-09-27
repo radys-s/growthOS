@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from enum import StrEnum
+from typing import Protocol
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel
@@ -29,6 +30,10 @@ class DeadlineInfo(BaseModel):
     kind: DeadlineKind
     date: datetime | None
     label: str
+    # Set only for an official deadline found by the deadline watcher (ADR 0006):
+    # the verbatim sentence from the official page and that page's URL.
+    quote: str | None = None
+    quote_url: str | None = None
 
 
 def _add_years(value: datetime, years: int) -> datetime:
@@ -83,3 +88,20 @@ def deadline_info(
             kind=DeadlineKind.UNKNOWN, date=None, label="každoročně, termín zatím nezveřejněn"
         )
     return DeadlineInfo(kind=DeadlineKind.UNKNOWN, date=None, label="deadline nezveřejněn")
+
+
+class _DeadlineRow(Protocol):
+    deadline_at: datetime | None
+    recurrence: str | None
+    last_known_deadline: datetime | None
+    deadline_source: str | None
+    deadline_quote: str | None
+    watch_url: str | None
+
+
+def opportunity_deadline(row: _DeadlineRow, now: datetime) -> DeadlineInfo:
+    info = deadline_info(row.deadline_at, row.recurrence, row.last_known_deadline, now)
+    if info.kind == DeadlineKind.OFFICIAL and row.deadline_source == "extracted":
+        info.quote = row.deadline_quote
+        info.quote_url = row.watch_url
+    return info

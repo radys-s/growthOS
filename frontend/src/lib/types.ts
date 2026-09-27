@@ -5,7 +5,14 @@
 
 // backend/app/opportunities/deadlines.py
 export type DeadlineKind = "official" | "expected" | "rolling" | "passed" | "unknown";
-export type DeadlineInfo = { kind: DeadlineKind; date: string | null; label: string };
+export type DeadlineInfo = {
+  kind: DeadlineKind;
+  date: string | null;
+  label: string;
+  // official deadline found by the deadline watcher: verbatim quote + page it came from
+  quote: string | null;
+  quote_url: string | null;
+};
 
 // backend/app/sources/base.py
 export type Eligibility = {

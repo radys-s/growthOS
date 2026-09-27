@@ -5,6 +5,8 @@
 # - recurring events: recurrence + last_known_deadline (previous edition, from evidence_url).
 # - eligibility.verified: true only when the rules were checked at the source; unknown stays null.
 # - Dates without time = 23:59 Europe/Prague. Review this file weekly.
+# - watch_url: official page where the next deadline appears. The deadline watcher (ADR 0006)
+#   stores a deadline found there only with a verbatim quote; deadline_at here always wins.
 
 - id: ceska-ai-olympiada
   kind: olympiad
@@ -12,6 +14,7 @@
   organizer: NVIAS
   url: https://www.aiolympiada.cz/
   evidence_url: https://asociace.ai/ceska-ai-olympiada-2026-prvni-narodni-soutez-v-umele-inteligenci-pro-stredoskolaky/
+  watch_url: https://www.aiolympiada.cz/
   description: >
     Národní soutěž v AI pro středoškoláky a oficiální cesta do české reprezentace na IOAI.
     Kategorie AI Tech (ML úlohy v Pythonu, formát IOAI) a AI Startup (tým 3 lidí).
@@ -63,6 +66,7 @@
   organizer: MFF UK / Matematická olympiáda
   url: https://mo.mff.cuni.cz/p/
   evidence_url: https://mo.mff.cuni.cz/p/
+  watch_url: https://mo.mff.cuni.cz/p/
   description: >
     Programátorská olympiáda pro středoškoláky, cesta na IOI a CEOI. Domácí kolo (4 úlohy)
     se odevzdává přes web; v ročníku 2025/26 do 15. 11. 2025. Termín pro 2026/27 ověř na webu.
@@ -87,6 +91,7 @@
   organizer: MFF UK
   url: https://kasiopea.matfyz.cz/
   evidence_url: https://kasiopea.matfyz.cz/
+  watch_url: https://kasiopea.matfyz.cz/
   description: >
     Online programátorská soutěž pro středoškoláky. Domácí kolo ročníku 2025/26 proběhlo
     22. 11. – 7. 12. 2025, pak finále. Dobrá rozcvička na olympiádu i pohovory.
@@ -110,6 +115,7 @@
   organizer: NPI ČR / SOČ
   url: https://www.soc.cz/
   evidence_url: https://www.soc.cz/aktualni-rocnik/
+  watch_url: https://www.soc.cz/aktualni-rocnik/
   description: >
     Vlastní odborná práce + obhajoba. Školní kola bývají v únoru (termín určuje škola),
     pak krajské a celostátní kolo; nejlepší práce postupují na mezinárodní soutěže (EUCYS, ISEF).
@@ -135,6 +141,7 @@
   organizer: CERN
   url: https://beamlineforschools.cern/
   evidence_url: https://beamlineforschools.cern/how-to-take-part/
+  watch_url: https://beamlineforschools.cern/how-to-take-part/
   description: >
     Týmová soutěž středoškoláků — návrh experimentu na urychlovači; vítězové jedou do CERN/DESY.
     Deadline ročníku 2026 byl 13. 3. 2026 (23:59 SELČ); termín 2027 zatím nezveřejněn.
@@ -181,6 +188,7 @@
   organizer: Junction
   url: https://2026.hackjunction.com/
   evidence_url: https://2026.hackjunction.com/
+  watch_url: https://2026.hackjunction.com/
   description: >
     Největší evropský hackathon, 13.–15. 11. 2026, Hype Areena v Espoo. Účast zdarma po přijetí
     přihlášky; cesta se platí zvlášť. Nezletilí potřebují souhlas rodiče. Deadline přihlášek ověř.
@@ -204,6 +212,7 @@
   organizer: Wolfram Research
   url: https://education.wolfram.com/summer-research-high-school/
   evidence_url: https://education.wolfram.com/summer-research-high-school/admission/
+  watch_url: https://education.wolfram.com/summer-research-high-school/admission/
   description: >
     Letní výzkumný program pro středoškoláky (~80 přijatých), přijímá i zahraniční studenty,
     need-based stipendia. Přihlášky na 2027 se otevírají na podzim 2026; v cyklu 2026 byl
@@ -228,6 +237,7 @@
   organizer: Center for Excellence in Education
   url: https://www.cee.org/programs/apply-rsi
   evidence_url: https://www.cee.org/programs/research-science-institute-rsi/rsi-application-faqs
+  watch_url: https://www.cee.org/programs/apply-rsi
   description: >
     Nejprestižnější letní výzkumný program pro středoškoláky. Jen pro předposlední ročník SŠ,
     16 let do 1. 7. roku programu. Zahraniční studenti jen přes partnerskou organizaci v zemi —

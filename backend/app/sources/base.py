@@ -82,6 +82,10 @@ class NormalizedOpportunity(BaseModel):
     source: str
     source_ref: str
     evidence_url: HttpUrl
+    watch_url: HttpUrl | None = Field(
+        default=None,
+        description="Official page where the next edition's deadline appears (deadline watcher).",
+    )
     fetched_at: AwareDatetime
 
     @computed_field  # type: ignore[prop-decorator]
