@@ -106,13 +106,24 @@ Every open Opportunity is ranked as an implicit `apply` action, so both types sh
 
 | Field | Type | Notes |
 |---|---|---|
-| item_type | enum | `opportunity`, `action` |
-| item_id | uuid | |
-| decision | enum | `planned`, `done`, `skipped`, `not_interested`, `already_knew` |
+| profile_id | uuid | |
+| target_type | enum | `opportunity`, `action` |
+| target_id | uuid | |
+| status | enum | `planned`, `done`, `skipped`, `not_interested`, `already_knew` |
 | note | str? | |
-| decided_at | datetime | latest decision per item wins |
+| created_at | datetime | append-only log; latest per target wins (strictly increasing) |
 
 Effect on ranking: `done`, `skipped`, `not_interested` → hidden; `planned` → shown with badge;
 `already_knew` → shown, excluded from the novelty metric.
+
+**Novelty (weekly success metric):** items first seen in the last 7 days; `new_worthwhile` = those
+that pass the gates and are not marked `already_knew`. Returned with `/recommendations`.
+
+## API (M1)
+
+`GET /taxonomy` · `GET/PUT /profile` · `PUT /profile/skills` · `POST/DELETE /profile/items` ·
+`GET /goal-templates` · `GET/POST /goals` · `PATCH/DELETE /goals/{id}` · `GET /goals/{id}/gaps` ·
+`GET /opportunities` · `POST /sources/run` · `GET /recommendations?goal_id=&top_n=` ·
+`GET/POST /decisions` · `GET /health`
 
 **Weekly novelty metric** = items decided `planned`/`done` in the last 7 days that were *not* marked `already_knew`.

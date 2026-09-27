@@ -4,6 +4,7 @@ Pure functions over plain facts: no database, no clock, no LLM. The same inputs 
 same ranking, and every number that influenced it is returned for the explanation UI.
 """
 
+import uuid
 from datetime import date, datetime
 
 from pydantic import BaseModel
@@ -48,8 +49,11 @@ class GoalFacts(BaseModel):
 class Candidate(BaseModel):
     key: str  # "opportunity:<id>" or "action:<id>"
     source: str  # "opportunity" | "action"
+    target_id: uuid.UUID | None = None  # row id, used to record decisions
     kind: str
     title: str
+    organizer: str | None = None
+    description: str | None = None
     url: str | None = None
     signals: list[str]
     cv_signal: int | None = None
@@ -61,6 +65,7 @@ class Candidate(BaseModel):
     eligibility: Eligibility | None = None  # None for growth actions
     closed: bool = False
     decision: str | None = None  # latest decision status
+    is_new: bool = False  # first seen within the novelty window
 
 
 class GapItem(BaseModel):

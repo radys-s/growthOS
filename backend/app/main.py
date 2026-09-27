@@ -12,9 +12,11 @@ from app import __doc__ as app_doc
 from app.common import utcnow
 from app.config import get_settings
 from app.db import check_database, engine
+from app.decisions.router import router as decisions_router
 from app.goals.router import router as goals_router
 from app.opportunities.router import router as opportunities_router
 from app.profile.router import router as profile_router
+from app.recommendations.router import router as recommendations_router
 from app.scheduler import refresh_sources, start_scheduler
 from app.seed import run as run_seed
 
@@ -53,6 +55,8 @@ app.add_middleware(
 app.include_router(profile_router)
 app.include_router(goals_router)
 app.include_router(opportunities_router)
+app.include_router(recommendations_router)
+app.include_router(decisions_router)
 
 
 class HealthResponse(BaseModel):
