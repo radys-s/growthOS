@@ -1,0 +1,26 @@
+id: competition_profile
+title: Silnější soutěžní profil
+description: >
+  Výsledky v olympiádách a ML soutěžích, které jsou vidět navenek
+  (IOAI, národní olympiády, Kaggle, SOČ, hackathony).
+kind: competition_profile
+required_signals:
+  - { signal: olympiad_result, importance: 3 }
+  - { signal: ml_competition_result, importance: 3 }
+  - { signal: algorithms, importance: 3 }
+  - { signal: deep_learning, importance: 2 }
+  - { signal: math_foundations, importance: 2 }
+  - { signal: classical_ml, importance: 2 }
+  - { signal: hackathon_result, importance: 2 }
+  - { signal: international_experience, importance: 1 }
+  - { signal: research_evidence, importance: 1 }
+  - { signal: presentation, importance: 1 }
+weights:
+  relevance: 0.25
+  gap_coverage: 0.20
+  cv_signal: 0.20
+  skill_gain: 0.05
+  probability: 0.15
+  urgency: 0.15
+  effort: 0.10
+  cost: 0.10

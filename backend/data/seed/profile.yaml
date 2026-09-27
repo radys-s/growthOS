@@ -1,0 +1,39 @@
+# Starting profile for the single M1 user. It is an EXAMPLE assembled from what the agent knew —
+# edit it in the UI (/profile) to match reality. Loaded only when no profile exists yet.
+name: Tomáš
+country: CZ
+education_level: high_school
+birth_date: null          # fill in — needed for age-based eligibility gates
+graduation_year: null
+max_cost_eur: 100
+weekly_hours_budget: 10
+
+skills:
+  - { signal: python, level: 3 }
+  - { signal: classical_ml, level: 3 }
+  - { signal: deep_learning, level: 2 }
+  - { signal: computer_vision, level: 2 }
+  - { signal: data_analysis, level: 3 }
+  - { signal: math_foundations, level: 2 }
+  - { signal: production_backend, level: 2 }
+  - { signal: frontend, level: 2 }
+  - { signal: algorithms, level: 2 }
+  - { signal: nlp, level: 1 }
+  - { signal: deployment, level: 1 }
+
+items:
+  - kind: competition
+    title: ML soutěž (Instacart) — cca 81. místo z 5000
+    result: "~81 / 5000"
+    description: LightGBM, XGBoost, CatBoost. Ověř přesné umístění a doplň odkaz.
+    signals: [ml_competition_result, classical_ml]
+    strength: 3
+  - kind: project
+    title: Příprava na IOAI — řešení mock úloh
+    description: Detekce anomálií (robust PCA, test F1 0.80 nad referencí), CLIP + probe fusion.
+    signals: [deep_learning, computer_vision, classical_ml]
+    strength: 1
+  - kind: project
+    title: Wi-Fi Radar — lokální dashboard (FastAPI + React)
+    signals: [production_backend, frontend]
+    strength: 1

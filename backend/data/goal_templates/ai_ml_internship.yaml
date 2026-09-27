@@ -1,0 +1,27 @@
+id: ai_ml_internship
+title: AI/ML internship 2027
+description: >
+  Silná přihláška na AI/ML stáž v létě 2027. Rozhoduje doložitelná praxe:
+  nasazené projekty, produkční backend, výsledky v soutěžích a výzkumný výstup.
+kind: internship
+required_signals:
+  - { signal: deep_learning, importance: 3 }
+  - { signal: deployment, importance: 3 }
+  - { signal: public_portfolio, importance: 3 }
+  - { signal: production_backend, importance: 2 }
+  - { signal: ml_competition_result, importance: 2 }
+  - { signal: research_evidence, importance: 2 }
+  - { signal: industry_experience, importance: 2 }
+  - { signal: mlops, importance: 1 }
+  - { signal: cloud, importance: 1 }
+  - { signal: open_source_contribution, importance: 1 }
+  - { signal: teamwork, importance: 1 }
+weights:
+  relevance: 0.20
+  gap_coverage: 0.30
+  cv_signal: 0.20
+  skill_gain: 0.10
+  probability: 0.10
+  urgency: 0.10
+  effort: 0.15
+  cost: 0.10

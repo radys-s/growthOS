@@ -40,7 +40,7 @@ Gap analysis and relevance are then plain set arithmetic — deterministic, expl
 | title, description, result, url | str | result e.g. "81st / 5000" |
 | signals | list[signal] | what the item proves |
 | strength | int 0–4 | how strong it looks externally |
-| date | date? | |
+| achieved_on | date? | |
 
 **Coverage** of signal `s` = `max(skill_level(s), max strength of items proving s) / 4` ∈ [0, 1].
 
