@@ -98,7 +98,8 @@ def test_already_knew_stays_but_not_new_worthwhile(seeded: TestClient) -> None:
     after = seeded.get("/recommendations").json()
     assert item["key"] in {i["candidate"]["key"] for i in after["ranked"]}
     assert after["novelty"]["already_knew"] == 1
-    assert after["novelty"]["new_worthwhile"] == before["novelty"]["new_worthwhile"] - 1
+    assert after["novelty"]["newly_discovered"] == before["novelty"]["newly_discovered"] - 1
+    assert after["novelty"]["explicitly_useful"] == 0
 
 
 def test_decision_validation(seeded: TestClient) -> None:

@@ -11,6 +11,8 @@ class TargetType(StrEnum):
 
 
 class DecisionStatus(StrEnum):
+    REVERSED = "reversed"
+    USEFUL = "useful"
     PLANNED = "planned"  # stays in the list, marked as planned
     DONE = "done"  # hidden
     SKIPPED = "skipped"  # hidden

@@ -16,3 +16,6 @@ __all__ = [
     "ProfileSkill",
     "SourceRun",
 ]
+
+from app.calendar.models import CalendarConnection  # noqa: F401
+from app.growth.models import ImportProposal, PlannedAction, ProgressSnapshot  # noqa: F401

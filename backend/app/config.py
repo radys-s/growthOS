@@ -7,8 +7,11 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     database_url: str = "sqlite:///./growthos.db"
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = "http://127.0.0.1:8000/calendar/callback"
     ai_provider: str = "none"
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     scheduler_enabled: bool = True  # weekly source refresh + refresh on startup
     # Sources (V1). Empty credentials = the adapter reports "not configured" and is skipped.
     sources_enabled: str = "curated,devpost,kaggle"

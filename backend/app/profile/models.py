@@ -55,6 +55,14 @@ class ProfileItem(Base):
     signals: Mapped[list[str]] = mapped_column(JSON, default=list)
     strength: Mapped[int] = mapped_column(Integer)
     achieved_on: Mapped[date | None] = mapped_column(Date)
+    provenance: Mapped[dict] = mapped_column(JSON, default=dict, server_default="{}")
+    confirmation_state: Mapped[str] = mapped_column(
+        String(20), default="confirmed", server_default="confirmed"
+    )
+    evidence_kind: Mapped[str] = mapped_column(
+        String(20), default="demonstrated", server_default="demonstrated"
+    )
+    import_key: Mapped[str | None] = mapped_column(String(64), unique=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
     profile: Mapped[Profile] = relationship(back_populates="items")

@@ -7,7 +7,7 @@ same ranking, and every number that influenced it is returned for the explanatio
 import uuid
 from datetime import date, datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.credentials import Credential, CredentialTier, Tier, credential_tier, goal_fit
 from app.opportunities.deadlines import DeadlineInfo, DeadlineKind
@@ -72,7 +72,15 @@ class Candidate(BaseModel):
     is_new: bool = False  # first seen within the novelty window
 
 
+class GapSupport(BaseModel):
+    item_id: uuid.UUID | None = None
+    title: str
+    kind: str
+    coverage: float
+
+
 class GapItem(BaseModel):
+    supports: list[GapSupport] = Field(default_factory=list)
     signal: str
     label: str
     importance: int
@@ -327,6 +335,10 @@ def score(
     if candidate.credential is not None:
         fit = goal_fit(factors["relevance"], factors["gap_coverage"])
         tier = credential_tier(candidate.credential, fit)
+        # Credential reputation contributes only to the outward CV signal.
+        # The learning factor remains independent even for a weak badge.
+        factors["cv_signal"] = min(factors["cv_signal"], tier.score)
+        contrib = contributions(factors, goal.weights)
     positive = sorted(
         (
             (name, value)
@@ -389,10 +401,8 @@ def rank(
             continue
         item = score(candidate, profile, goal, now, taxonomy)
         if item.credential_tier is not None and item.credential_tier.tier == Tier.IGNORE:
-            # tier gate: needs the goal-dependent factors, so it runs after scoring
-            filtered.append(FilteredItem(candidate=candidate, reason=LOW_CREDENTIAL_VALUE))
-        else:
-            ranked.append(item)
+            item.warnings.append("Slabý certifikát; přínos učení se hodnotí samostatně.")
+        ranked.append(item)
     ranked.sort(key=_sort_key)
     filtered.sort(key=lambda f: (f.candidate.title, f.candidate.key))
     return RankingResult(top=diversify(ranked, top_n), ranked=ranked, filtered=filtered)

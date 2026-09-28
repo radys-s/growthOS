@@ -45,6 +45,9 @@ class ProfileItemIn(BaseModel):
 class ProfileItemOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    provenance: dict = Field(default_factory=dict)
+    confirmation_state: str = "confirmed"
+    evidence_kind: str = "demonstrated"
     id: uuid.UUID
     kind: ProfileItemKind
     title: str
