@@ -116,13 +116,13 @@ async function DashboardContent({ kind }: { kind: Promise<string | null> }) {
         </nav>
         <p
           className="text-sm text-zinc-400"
-          title="Metrika úspěchu: aspoň 1 nová užitečná věc týdně"
+          title="Nově objevené položky a tvé výslovné hodnocení"
         >
           Za {novelty.window_days} dní:{" "}
-          <span className={novelty.new_worthwhile > 0 ? "text-emerald-300" : "text-amber-300"}>
-            {novelty.new_worthwhile} nových užitečných
+          <span className={novelty.explicitly_useful > 0 ? "text-emerald-300" : "text-amber-300"}>
+            {novelty.explicitly_useful} označených jako užitečné
           </span>{" "}
-          z {novelty.new_items} nových
+          · {novelty.newly_discovered} nově objevených
         </p>
       </div>
 

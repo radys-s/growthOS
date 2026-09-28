@@ -10,8 +10,10 @@ Not a job board. Opportunity Radar is one module.
 
 ## Current focus
 
-**Milestone 1 vertical slice** (see roadmap). Do not add Gmail, certification crawlers, project
-generators or extra AI features until M1 works well. Prefer finishing the slice over broadening.
+**V2: evidence, imports, progress and weekly planning.** M1 and V1 are implemented. Keep CV and
+GitHub analysis local and rule-based. Imported claims do not increase coverage until the user
+confirms a demonstrated result. Google integration touches only its own dedicated calendar.
+See ADRs 0007 and 0008 and [roadmap](docs/roadmap.md).
 
 ## Layout
 
@@ -61,3 +63,5 @@ npm run lint && npm run build
 
 - Branch `main`, small logical commits, messages in Czech (imperative summary line).
 - Verify author (`radys-s`), remote and branch before pushing. No force-push without asking.
+- The local V2 server runs as one process. The process-wide write lock protects confirmation and
+  calendar sync; a multi-worker deployment needs a database-level lock before it is supported.

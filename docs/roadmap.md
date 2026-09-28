@@ -54,9 +54,27 @@ To tune after review:
 - course certificates (NVIDIA DLI, Kaggle Learn) fall into Ignore under the spec formula;
 - hackathons dominate the full ranking; Top 5 is held by diversity.
 
+## V2 — Evidence, imports, planning and progress
+
+Implementation completed 2026-09-28. Functional verification and live Google authorization are
+tracked separately.
+
+- [x] Local PDF/DOCX/text CV proposals and public GitHub metadata/README/manifests; explicit
+  review and confirmation, provenance and duplicate protection (ADR 0007)
+- [x] Completion results and confirmed evidence change gaps and recommendations; append-only
+  decision history and progress snapshots
+- [x] Weak credential value no longer excludes learning; discovered and explicitly useful counts
+  are separate
+- [x] Weekly work plans with capacity warning and optional Prague time
+- [x] Dedicated Google calendar OAuth, locally protected tokens, two-way sync, conflict choice,
+  retry and recovery handling (ADR 0008)
+- [x] API/TypeScript contracts and Czech UI
+- [x] Startup checks migrations and both services before opening the dashboard
+- [ ] Live Google synchronization after OAuth client setup and account authorization
+- [ ] Tomáš's qualitative assessment of recommendation quality with his real profile
+
 ## Later
 
-- V2: automatic gap analysis, CV import, GitHub analysis, calendar/deadlines, decision history, learning recs
 - V3: Gmail source adapter (extraction → opportunity / deadline / achievement)
 - V4: Career Strategist — long-horizon roadmap that re-plans
 

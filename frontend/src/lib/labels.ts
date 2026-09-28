@@ -41,6 +41,8 @@ export const FACTOR_ORDER: FactorName[] = [
 ];
 
 export const DECISION_LABELS: Record<DecisionStatus, string> = {
+  useful: "Užitečné",
+  reversed: "Vráceno zpět",
   planned: "Naplánovat",
   done: "Hotovo",
   skipped: "Přeskočit",

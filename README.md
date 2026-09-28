@@ -10,11 +10,13 @@ Competitions, olympiads, hackathons, internships, research programs, scholarship
 certifications and strong technical projects — ranked by what actually moves *my* profile toward
 *my* goal, with an explanation for every recommendation.
 
-**Status:** V1 is built.
+**Status:** V2 is implemented locally; Google live authorization still requires OAuth credentials.
 - **M1:** profile + goal → curated opportunities and growth actions → deterministic ranking →
   Top 5 with reasons, factor breakdown and decision buttons.
 - **V1:** Devpost + Kaggle sources, an LLM deadline watcher with quote verification, and
   S/A/B/C tiers for certifications.
+- **V2:** local CV/public GitHub proposals, confirmed outcomes and provenance, history and
+  progress snapshots, a weekly plan, and a dedicated Google calendar with conflict handling.
 
 See [roadmap](docs/roadmap.md).
 
@@ -35,12 +37,14 @@ See [roadmap](docs/roadmap.md).
 - **Deadline watcher** ([ADR 0006](docs/decisions/0006-automatic-sources-and-verified-llm-extraction.md)):
   for curated items with a `watch_url`, an LLM (OmniRoute) proposes the new deadline. Code accepts
   it only if the quote is found word for word on the page. The UI then shows the quote.
-- **Certifications** get a tier (S/A/B/C) based on how much they're worth for the active goal. Tier
-  Ignore is excluded.
+- **Certifications** get a tier (S/A/B/C/Ignore). Weak certificates retain their possible learning
+  value; the tier limits only the external CV value.
 - **Ranking** ([spec](docs/scoring.md)): hard gates → 8 factors → weighted priority → Top 5 with
   max 2 of a kind. Every number is shown under *Proč právě tohle?*.
-- **Decisions:** planned / done / skipped / not interested / already knew (undo in *Rozhodnuté*).
-  The header shows the weekly metric: new worthwhile items in the last 7 days.
+- **Decisions:** history is append-only. Undo writes a reversal event. The dashboard separately
+  shows newly discovered recommendations and items you explicitly marked useful.
+- **Growth workspace** (`/growth`): review imports one by one, confirm completed results, plan a
+  week, and view history, progress and Google calendar state.
 
 ## Docs
 
@@ -55,17 +59,18 @@ Requirements: Python 3.13 + [uv](https://docs.astral.sh/uv/), Node 24, PostgreSQ
 
 ```bash
 cp .env.example backend/.env        # then fill DATABASE_URL
-cd backend && uv sync && uv run python -m alembic upgrade head && uv run uvicorn app.main:app --reload
+cd backend && uv sync && uv run python -m alembic upgrade head && uv run python -m uvicorn app.main:app --reload --no-access-log
 cd frontend && npm install && npm run dev
 ```
 
 Open http://localhost:3000.
 
-On Windows, `start.ps1` does all of it (migrations, both servers in their own windows, opens the
-browser):
+On Windows, `start.py` runs migrations, starts only missing services, waits for both health checks,
+then opens the browser. Failed migrations prevent startup. Logs and process records are kept in
+gitignored `.runtime/`.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\start.ps1
+python .\start.py
 ```
 
 With Docker instead of native Postgres: `docker compose up -d db`.
@@ -76,6 +81,23 @@ Optional keys in `backend/.env`:
   `http://127.0.0.1:20128/v1`).
 
 Without them these parts report "nenakonfigurováno" and the rest works.
+
+Google Calendar is optional. Create a Google Cloud OAuth web client with the Calendar API enabled
+and redirect URI `http://127.0.0.1:8000/calendar/callback`. Set `GOOGLE_CLIENT_ID` and
+`GOOGLE_CLIENT_SECRET` in `backend/.env`. Open `/growth?tab=calendar`, connect the account, create
+the dedicated growthOS calendar, and synchronize. The sole requested scope is
+`calendar.app.created`; no personal calendars are read. OAuth tokens are encrypted with the current
+Windows user's DPAPI key and never returned by the API. Authorization must be done on the same
+Windows account that runs the backend. If calendar creation loses its response, recover using the
+calendar ID from Google settings. If the calendar was actually deleted, explicitly replace it;
+plans and completed evidence stay in growthOS. An uncertain opportunity deadline is never
+automatically added as a confirmed event.
+
+Text PDF, DOCX and pasted CV text are supported. Scanned PDFs require pasted text. CV and GitHub
+content is parsed locally and stored only as reviewable excerpts in the local database; it is never
+sent to OmniRoute. Public GitHub imports read metadata, README and selected dependency manifests
+through the official API and never execute repository code. Back up the local PostgreSQL database
+if these records matter to you; imported proposals contain personal CV text.
 
 ## OneDrive note
 
