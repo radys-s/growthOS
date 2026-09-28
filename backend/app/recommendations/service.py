@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.credentials import Credential
-from app.decisions.service import latest_decisions
+from app.decisions.service import latest_decisions, list_decisions
 from app.goals.models import Goal
 from app.opportunities.deadlines import opportunity_deadline
 from app.opportunities.models import GrowthAction, Opportunity
@@ -18,6 +18,7 @@ from app.ranking.engine import (
     Candidate,
     FilteredItem,
     GapItem,
+    GapSupport,
     GoalFacts,
     ProfileFacts,
     RankedItem,
@@ -35,7 +36,9 @@ class Novelty(BaseModel):
 
     window_days: int
     new_items: int  # first seen within the window
-    new_worthwhile: int  # new, passes the gates, not already known
+    new_worthwhile: int  # compatibility: explicitly useful only
+    newly_discovered: int
+    explicitly_useful: int
     already_knew: int  # new items the user marked "already knew"
 
 
@@ -68,7 +71,21 @@ def goal_facts(goal: Goal) -> GoalFacts:
 
 
 def gaps_for(goal: Goal, profile: Profile) -> list[GapItem]:
-    return goal_gaps(goal_facts(goal), signal_coverage(profile), load_taxonomy())
+    gaps = goal_gaps(goal_facts(goal), signal_coverage(profile), load_taxonomy())
+    for gap in gaps:
+        gap.supports = [
+            GapSupport(item_id=i.id, title=i.title, kind=i.evidence_kind, coverage=i.strength / 4)
+            for i in profile.items
+            if gap.signal in i.signals
+            and i.confirmation_state == "confirmed"
+            and i.evidence_kind == "demonstrated"
+        ]
+        gap.supports.extend(
+            GapSupport(title="Ručně uvedená dovednost", kind="self_assessed", coverage=s.level / 4)
+            for s in profile.skills
+            if s.signal == gap.signal
+        )
+    return gaps
 
 
 def _opportunity_candidate(
@@ -137,14 +154,19 @@ def recommend(
     result = rank(candidates, profile_facts(profile), goal_facts(goal), now, top_n=top_n)
 
     new = [c for c in candidates if c.is_new]
+    useful = {
+        f"{d.target_type}:{d.target_id}"
+        for d in list_decisions(session, profile)
+        if d.status == "useful" and d.created_at >= since
+    }
     novelty = Novelty(
         window_days=NOVELTY_DAYS,
         new_items=len(new),
-        new_worthwhile=sum(
-            1
-            for item in result.ranked
-            if item.candidate.is_new and item.candidate.decision != "already_knew"
+        new_worthwhile=len(useful),
+        newly_discovered=sum(
+            i.candidate.is_new and i.candidate.decision != "already_knew" for i in result.ranked
         ),
+        explicitly_useful=len(useful),
         already_knew=sum(1 for c in new if c.decision == "already_knew"),
     )
     return Recommendations(

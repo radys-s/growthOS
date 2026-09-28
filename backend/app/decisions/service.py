@@ -1,12 +1,12 @@
 import uuid
 from datetime import timedelta
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.common import utcnow
 from app.decisions.models import Decision
-from app.decisions.schemas import DecisionIn, TargetType
+from app.decisions.schemas import DecisionIn, DecisionStatus, TargetType
 from app.opportunities.models import GrowthAction, Opportunity
 from app.profile.models import Profile
 
@@ -40,16 +40,16 @@ def record_decision(session: Session, profile: Profile, data: DecisionIn) -> Dec
 def clear_decisions(
     session: Session, profile: Profile, target_type: TargetType, target_id: uuid.UUID
 ) -> int:
-    """Undo: forget every decision about a target, so it is undecided again."""
-    result = session.execute(
-        delete(Decision).where(
-            Decision.profile_id == profile.id,
-            Decision.target_type == target_type.value,
-            Decision.target_id == target_id,
-        )
+    """Append a reversal; historical decisions and evidence remain intact."""
+    key = f"{target_type.value}:{target_id}"
+    if key not in latest_decisions(session, profile):
+        return 0
+    record_decision(
+        session,
+        profile,
+        DecisionIn(target_type=target_type, target_id=target_id, status=DecisionStatus.REVERSED),
     )
-    session.commit()
-    return result.rowcount
+    return 1
 
 
 def list_decisions(session: Session, profile: Profile) -> list[Decision]:
@@ -66,4 +66,4 @@ def latest_decisions(session: Session, profile: Profile) -> dict[str, str]:
     latest: dict[str, str] = {}
     for decision in list_decisions(session, profile):  # newest first
         latest.setdefault(f"{decision.target_type}:{decision.target_id}", decision.status)
-    return latest
+    return {key: value for key, value in latest.items() if value != "reversed"}

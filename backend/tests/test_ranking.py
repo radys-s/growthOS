@@ -254,7 +254,7 @@ def test_weak_factors_are_not_quoted_as_reasons() -> None:
 # --- credential tiers ---------------------------------------------------------------------
 
 
-def test_credential_tier_on_ranked_item_and_ignore_gate() -> None:
+def test_credential_value_does_not_gate_learning() -> None:
     on_goal = _cand(
         "cert",
         kind="certification",
@@ -274,6 +274,6 @@ def test_credential_tier_on_ranked_item_and_ignore_gate() -> None:
     assert by_key["cert"].credential_tier is not None
     assert by_key["cert"].credential_tier.tier == "S"  # deployment: on goal, uncovered gap
     assert by_key["plain"].credential_tier is None
-    assert [(f.candidate.key, f.reason) for f in result.filtered] == [
-        ("badge", "Nízká hodnota certifikátu pro tvůj cíl")
-    ]
+    assert not result.filtered
+    assert by_key["badge"].credential_tier.tier == "ignore"
+    assert by_key["badge"].warnings

@@ -29,20 +29,29 @@ def update_profile(session: Session, profile: Profile, data: ProfileUpdate) -> P
 
 
 def replace_skills(session: Session, profile: Profile, skills: list[ProfileSkillIn]) -> Profile:
+    from app.growth.service import snapshot
+
+    snapshot(session, profile, "Před změnou sebehodnocení")
     by_signal = {s.signal: s.level for s in skills}  # last value wins on duplicates
     profile.skills.clear()
     session.flush()
     profile.skills.extend(ProfileSkill(signal=sig, level=lvl) for sig, lvl in by_signal.items())
+    snapshot(session, profile, "Změna sebehodnocení dovedností")
     session.commit()
     session.refresh(profile)
     return profile
 
 
 def add_item(session: Session, profile: Profile, data: ProfileItemIn) -> ProfileItem:
+    from app.growth.service import snapshot
+
+    snapshot(session, profile, "Před ručním přidáním výsledku")
     payload = data.model_dump(mode="json")
     payload["achieved_on"] = data.achieved_on
-    item = ProfileItem(**payload)
+    item = ProfileItem(**payload, provenance={"source": "manual", "reference": "Ruční zadání"})
     profile.items.append(item)
+    session.flush()
+    snapshot(session, profile, "Ručně přidán výsledek: " + item.title)
     session.commit()
     return item
 
@@ -51,7 +60,14 @@ def delete_item(session: Session, profile: Profile, item_id: uuid.UUID) -> bool:
     item = session.get(ProfileItem, item_id)
     if item is None or item.profile_id != profile.id:
         return False
+    from app.growth.service import snapshot
+
+    snapshot(session, profile, "Před odstraněním výsledku")
+    title = item.title
     session.delete(item)
+    session.flush()
+    session.expire(profile, ["items"])
+    snapshot(session, profile, "Odstraněn výsledek: " + title)
     session.commit()
     return True
 
@@ -62,6 +78,8 @@ def signal_coverage(profile: Profile) -> dict[str, float]:
     for skill in profile.skills:
         best[skill.signal] = max(best.get(skill.signal, 0), skill.level)
     for item in profile.items:
+        if item.confirmation_state != "confirmed" or item.evidence_kind != "demonstrated":
+            continue
         for signal in item.signals:
             best[signal] = max(best.get(signal, 0), item.strength)
     return {signal: level / 4 for signal, level in best.items()}
