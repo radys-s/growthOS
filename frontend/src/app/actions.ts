@@ -9,6 +9,7 @@ import type { DecisionStatus, ProfileItemKind } from "@/lib/types";
 export type ActionState = { ok: boolean; message: string } | null;
 
 const DECISIONS: DecisionStatus[] = [
+  "useful",
   "planned",
   "done",
   "skipped",

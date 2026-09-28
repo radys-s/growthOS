@@ -36,3 +36,5 @@ desktop.ini
 # Agents
 .claude/settings.local.json
 .playwright-mcp/
+
+.runtime/

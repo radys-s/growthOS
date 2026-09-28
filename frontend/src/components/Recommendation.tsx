@@ -9,11 +9,27 @@ import {
   ORIGIN_LABELS,
   TIER_TONE,
 } from "@/lib/labels";
-import type { Candidate, CredentialTier, DecisionStatus, RankedItem } from "@/lib/types";
+import type {
+  Candidate,
+  CredentialTier,
+  DecisionStatus,
+  RankedItem,
+} from "@/lib/types";
 
-const BUTTONS: DecisionStatus[] = ["planned", "done", "skipped", "not_interested", "already_knew"];
+const BUTTONS: DecisionStatus[] = [
+  "useful",
+  "skipped",
+  "not_interested",
+  "already_knew",
+];
 
-export function Badge({ children, tone = "zinc" }: { children: React.ReactNode; tone?: string }) {
+export function Badge({
+  children,
+  tone = "zinc",
+}: {
+  children: React.ReactNode;
+  tone?: string;
+}) {
   const tones: Record<string, string> = {
     zinc: "border-white/10 bg-white/5 text-zinc-300",
     emerald: "border-emerald-400/30 bg-emerald-400/10 text-emerald-300",
@@ -32,7 +48,9 @@ export function Badge({ children, tone = "zinc" }: { children: React.ReactNode; 
 export function TierBadge({ tier }: { tier: CredentialTier | null }) {
   if (!tier || tier.tier === "ignore") return null;
   return (
-    <span title={`Hodnota certifikátu pro tvůj cíl (skóre ${tier.score.toFixed(2)})`}>
+    <span
+      title={`Hodnota certifikátu pro tvůj cíl (skóre ${tier.score.toFixed(2)})`}
+    >
       <Badge tone={TIER_TONE[tier.tier]}>Tier {tier.tier}</Badge>
     </span>
   );
@@ -43,8 +61,10 @@ export function DeadlineQuote({ candidate }: { candidate: Candidate }) {
   if (!deadline?.quote) return null;
   return (
     <p className="text-xs text-zinc-400">
-      <span className="text-emerald-300">✓ Termín ověřen citací ze stránky:</span> „{deadline.quote}
-      “
+      <span className="text-emerald-300">
+        ✓ Termín ověřen citací ze stránky:
+      </span>{" "}
+      „{deadline.quote}“
       {deadline.quote_url && (
         <>
           {" "}
@@ -73,26 +93,41 @@ export function CandidateMeta({
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400">
       <Badge>{kindLabel(candidate.kind)}</Badge>
       {candidate.origin && candidate.origin !== "curated" && (
-        <Badge tone="sky">{ORIGIN_LABELS[candidate.origin] ?? candidate.origin}</Badge>
+        <Badge tone="sky">
+          {ORIGIN_LABELS[candidate.origin] ?? candidate.origin}
+        </Badge>
       )}
       <TierBadge tier={tier} />
       {candidate.is_new && <Badge tone="emerald">Nové</Badge>}
-      {candidate.decision === "planned" && <Badge tone="sky">Naplánováno</Badge>}
-      {candidate.decision === "already_knew" && <Badge tone="violet">Už znám</Badge>}
+      {candidate.decision === "planned" && (
+        <Badge tone="sky">Naplánováno</Badge>
+      )}
+      {candidate.decision === "already_knew" && (
+        <Badge tone="violet">Už znám</Badge>
+      )}
       {candidate.deadline && (
-        <span className={DEADLINE_TONE[candidate.deadline.kind]}>⏱ {candidate.deadline.label}</span>
+        <span className={DEADLINE_TONE[candidate.deadline.kind]}>
+          ⏱ {candidate.deadline.label}
+        </span>
       )}
       {candidate.est_hours !== null && <span>~{candidate.est_hours} h</span>}
       {candidate.cost_eur !== null && (
-        <span>{candidate.cost_eur === 0 ? "zdarma" : `${candidate.cost_eur} €`}</span>
+        <span>
+          {candidate.cost_eur === 0 ? "zdarma" : `${candidate.cost_eur} €`}
+        </span>
       )}
-      {candidate.organizer && <span className="truncate">{candidate.organizer}</span>}
+      {candidate.organizer && (
+        <span className="truncate">{candidate.organizer}</span>
+      )}
     </div>
   );
 }
 
 function FactorBars({ item }: { item: RankedItem }) {
-  const max = Math.max(...FACTOR_ORDER.map((f) => Math.abs(item.contributions[f])), 0.0001);
+  const max = Math.max(
+    ...FACTOR_ORDER.map((f) => Math.abs(item.contributions[f])),
+    0.0001,
+  );
   return (
     <details className="group mt-3 rounded-lg bg-black/20 px-3 py-2 text-xs">
       <summary className="cursor-pointer select-none text-zinc-400 hover:text-zinc-200">
@@ -103,7 +138,10 @@ function FactorBars({ item }: { item: RankedItem }) {
           const value = item.contributions[factor];
           const width = `${(Math.abs(value) / max) * 100}%`;
           return (
-            <div key={factor} className="grid grid-cols-[9rem_1fr_3.5rem] items-center gap-2">
+            <div
+              key={factor}
+              className="grid grid-cols-[9rem_1fr_3.5rem] items-center gap-2"
+            >
               <dt className="text-zinc-400">{FACTOR_LABELS[factor]}</dt>
               <dd className="h-1.5 overflow-hidden rounded-full bg-white/5">
                 <div
@@ -132,25 +170,45 @@ function DecisionButtons({ candidate }: { candidate: Candidate }) {
     <form action={decide} className="mt-3 flex flex-wrap gap-1.5">
       <input type="hidden" name="target_type" value={candidate.source} />
       <input type="hidden" name="target_id" value={candidate.target_id} />
-      {BUTTONS.filter((status) => status !== candidate.decision).map((status) => (
-        <SubmitButton
-          key={status}
-          name="status"
-          value={status}
-          className={`rounded-md border px-2.5 py-1 text-xs transition ${
-            status === "planned" || status === "done"
-              ? "border-emerald-400/30 text-emerald-200 hover:bg-emerald-400/10"
-              : "border-white/10 text-zinc-400 hover:bg-white/5 hover:text-zinc-200"
-          }`}
-        >
-          {DECISION_LABELS[status]}
-        </SubmitButton>
-      ))}
+      <a
+        className="rounded-md border border-emerald-400/30 px-2.5 py-1 text-xs text-emerald-200"
+        href={`/growth?tab=plan&target=${candidate.target_id}&type=${candidate.source}&title=${encodeURIComponent(candidate.title)}`}
+      >
+        Naplánovat
+      </a>
+      <a
+        className="rounded-md border border-emerald-400/30 px-2.5 py-1 text-xs text-emerald-200"
+        href={`/growth?tab=complete&target=${candidate.target_id}&type=${candidate.source}&title=${encodeURIComponent(candidate.title)}`}
+      >
+        Zapsat výsledek
+      </a>
+      {BUTTONS.filter((status) => status !== candidate.decision).map(
+        (status) => (
+          <SubmitButton
+            key={status}
+            name="status"
+            value={status}
+            className={`rounded-md border px-2.5 py-1 text-xs transition ${
+              status === "planned" || status === "done"
+                ? "border-emerald-400/30 text-emerald-200 hover:bg-emerald-400/10"
+                : "border-white/10 text-zinc-400 hover:bg-white/5 hover:text-zinc-200"
+            }`}
+          >
+            {DECISION_LABELS[status]}
+          </SubmitButton>
+        ),
+      )}
     </form>
   );
 }
 
-export function RecommendationCard({ item, rank }: { item: RankedItem; rank: number }) {
+export function RecommendationCard({
+  item,
+  rank,
+}: {
+  item: RankedItem;
+  rank: number;
+}) {
   const { candidate } = item;
   return (
     <article className="rounded-xl border border-white/10 bg-zinc-950/40 p-4">

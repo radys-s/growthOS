@@ -45,6 +45,8 @@ no Redis/Celery, no multi-agent architecture until a concrete need proves otherw
 | `recommendations/` | Builds "Do next" (top N actions) from ranked opportunities + growth actions |
 | `credentials/` | Credential type classification and S/A/B/C/Ignore tiering |
 | `ai/` | LLM provider interface + OpenAI-compatible client (OmniRoute); extraction only, never scoring |
+| `growth/` | Local import previews, confirmed outcomes, progress snapshots and weekly plans |
+| `calendar/` | Dedicated Google calendar OAuth, protected tokens and three-way synchronization |
 
 Rules:
 
@@ -66,3 +68,12 @@ Rules:
    applies hard gates, computes factors against the goal's required signals and profile coverage.
 6. `recommendations/` picks a diverse Top N with reasons/warnings → `/recommendations` endpoint.
 7. The dashboard shows Do next · Opportunities · Profile gaps · Sources.
+
+## V2 evidence and planning flow
+
+The local import parser returns editable proposals with excerpts. Confirmed demonstrated results
+become profile items with provenance, then gap coverage and the deterministic ranking update.
+Completion adds a decision event and two progress snapshots. Undo appends a reversal event.
+The weekly plan stores work estimates and optional UTC schedule; the UI displays Prague time.
+Calendar sync uses a dedicated Google calendar and compares local and Google values against the
+last acknowledged value, presenting a conflict choice when both changed. See ADRs 0007 and 0008.

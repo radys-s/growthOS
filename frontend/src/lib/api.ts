@@ -14,6 +14,7 @@ export const API_URL = process.env.API_URL ?? "http://127.0.0.1:8000";
 
 /** Mirrors backend `HealthResponse` (backend/app/main.py). */
 export type HealthResponse = {
+  version: string;
   status: "ok" | "degraded";
   database: "ok" | "unreachable";
   database_dialect: string;

@@ -113,15 +113,16 @@ Every open Opportunity is ranked as an implicit `apply` action, so both types sh
 | profile_id | uuid | |
 | target_type | enum | `opportunity`, `action` |
 | target_id | uuid | |
-| status | enum | `planned`, `done`, `skipped`, `not_interested`, `already_knew` |
+| status | enum | `planned`, `done`, `skipped`, `not_interested`, `already_knew`, `useful`, `reversed` |
 | note | str? | |
 | created_at | datetime | append-only log; latest per target wins (strictly increasing) |
 
 Effect on ranking: `done`, `skipped`, `not_interested` → hidden; `planned` → shown with badge;
 `already_knew` → shown, excluded from the novelty metric.
 
-**Novelty (weekly success metric):** items first seen in the last 7 days; `new_worthwhile` = those
-that pass the gates and are not marked `already_knew`. Returned with `/recommendations`.
+**Novelty:** `newly_discovered` counts new, ranked items not marked already known;
+`explicitly_useful` counts new items the user marked useful. The legacy `new_worthwhile` field
+mirrors the latter for response compatibility. Neither count alone proves recommendation quality.
 
 ## SourceRun
 
@@ -136,4 +137,18 @@ One row per source (and the deadline watcher) per run: `source`, `ran_at`, `stat
 `GET /opportunities` · `GET /sources` · `POST /sources/run` · `GET /recommendations?goal_id=&top_n=` ·
 `GET/POST /decisions` · `GET /health`
 
-**Weekly novelty metric** = items decided `planned`/`done` in the last 7 days that were *not* marked `already_knew`.
+## V2 additions
+
+- `ProfileItem` gains `provenance` (source, reference, excerpt, confirmed time),
+  `confirmation_state`, `evidence_kind` (claimed or demonstrated), and unique `import_key`.
+  Only confirmed demonstrated items contribute to coverage. Existing manual items retain coverage.
+- `ImportProposal` stores a source fingerprint, original excerpt and editable proposed item.
+  `POST /imports/text`, `/imports/file`, `/imports/github` preview; `/imports/{id}/confirm`
+  applies once.
+- `ProgressSnapshot` records per-goal coverage before and after profile changes and their reason.
+  `GET /progress` and `GET /history` expose the snapshots and the append-only decision log.
+- `PlannedAction` stores target, work estimate, week, status, UTC schedule, calendar event ID,
+  common sync value and optional conflict. `GET/POST /plans` and `PUT /plans/{id}` serve the week.
+- `CalendarConnection` stores the dedicated calendar ID, connection state, and DPAPI-protected
+  OAuth tokens. `/calendar/status`, `/connect`, `/callback`, `/create`, `/sync`, `/conflicts`,
+  `/recover` and `/replace-missing` operate only on this calendar.

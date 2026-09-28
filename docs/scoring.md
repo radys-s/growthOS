@@ -79,8 +79,10 @@ Implemented in `backend/app/credentials/__init__.py` (V1).
   participation_badge 0.1.
 - `goal_fit = (relevance + gap_coverage) / 2`, both factors from §2. A credential whose signals are
   on goal but already covered by the profile is worth half as much.
-- Tiers: S ≥ 0.75, A ≥ 0.55, B ≥ 0.35, C ≥ 0.2, else Ignore. Ignore is a gate (§1).
+- Tiers: S ≥ 0.75, A ≥ 0.55, B ≥ 0.35, C ≥ 0.2, else Ignore. In V2, Ignore
+  describes the certificate's external value; it does not exclude a useful learning action.
 
 `credential.type` and `credential.issuer_reputation` (1–5) are curated facts on certification
-opportunities. Items without them get no tier. The tier is shown in the UI; it doesn't change the
-priority, which already contains `cv_signal`.
+opportunities. Items without them get no tier. The tier caps only the `cv_signal` factor to its
+score. `skill_gain` is computed independently. Thus a low-value course can still rank for learning,
+while its badge cannot masquerade as a strong credential.
