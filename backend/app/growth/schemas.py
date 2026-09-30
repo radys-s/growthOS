@@ -1,10 +1,13 @@
 import uuid
 from datetime import date, datetime
 from typing import Literal
+from zoneinfo import ZoneInfo
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 from app.profile.schemas import ProfileItemIn
+
+PRAGUE = ZoneInfo("Europe/Prague")
 
 
 class TextImport(BaseModel):
@@ -40,7 +43,7 @@ class Completion(Confirmation):
     def outcome(self):
         if not self.item.result or not self.item.result.strip() or not self.item.achieved_on:
             raise ValueError("Vyplň výsledek a datum dokončení.")
-        if self.item.achieved_on > date.today():
+        if self.item.achieved_on > datetime.now(PRAGUE).date():
             raise ValueError("Výsledek nemůže být v budoucnosti.")
         return self
 
@@ -71,8 +74,12 @@ class PlanIn(BaseModel):
             raise ValueError("Typ a ID akce musí být vyplněny společně.")
         if (self.starts_at is None) != (self.ends_at is None):
             raise ValueError("Vyplň začátek i konec.")
-        if self.starts_at and self.ends_at <= self.starts_at:
-            raise ValueError("Konec musí být po začátku.")
+        if self.starts_at and self.ends_at:
+            # Google Calendar keeps whole seconds; sub-second parts would never compare equal.
+            self.starts_at = self.starts_at.replace(microsecond=0)
+            self.ends_at = self.ends_at.replace(microsecond=0)
+            if self.ends_at <= self.starts_at:
+                raise ValueError("Konec musí být po začátku.")
         return self
 
 

@@ -154,11 +154,15 @@ def recommend(
     result = rank(candidates, profile_facts(profile), goal_facts(goal), now, top_n=top_n)
 
     new = [c for c in candidates if c.is_new]
-    useful = {
-        f"{d.target_type}:{d.target_id}"
-        for d in list_decisions(session, profile)
-        if d.status == "useful" and d.created_at >= since
-    }
+    # "Useful" survives later decisions such as done, but not a later reversal.
+    useful: set[str] = set()
+    reversed_: set[str] = set()
+    for d in list_decisions(session, profile):  # newest first
+        key = f"{d.target_type}:{d.target_id}"
+        if d.status == "reversed":
+            reversed_.add(key)
+        elif d.status == "useful" and d.created_at >= since and key not in reversed_:
+            useful.add(key)
     novelty = Novelty(
         window_days=NOVELTY_DAYS,
         new_items=len(new),

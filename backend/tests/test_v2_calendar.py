@@ -125,8 +125,7 @@ def test_event_ownership_and_cancel(session, planned):
     synchronize(api)
     event = api.events[planned.calendar_event_id]
     event["extendedProperties"] = {}
-    with pytest.raises(HTTPException):
-        synchronize(api)
+    assert len(synchronize(api)["skipped"]) == 1  # foreign event is left alone, sync continues
     event["extendedProperties"] = {"private": {"growthos_plan": str(planned.id)}}
     planned.status = "cancelled"
     session.commit()
@@ -160,7 +159,25 @@ def test_refresh_failure_and_missing_calendar(session):
     )
     session.commit()
     with (
-        httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(400))) as client,
+        httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(500))) as client,
+        pytest.raises(HTTPException) as error,
+    ):
+        GoogleCalendar(session, client).token()
+    assert error.value.status_code == 503 and row.state != "reauthorize"  # transient
+    with (
+        httpx.Client(
+            transport=httpx.MockTransport(lambda r: httpx.Response(200, json={}))
+        ) as client,
+        pytest.raises(HTTPException) as error,
+    ):
+        GoogleCalendar(session, client).token()
+    assert error.value.status_code == 503  # malformed answer is not a 500
+    with (
+        httpx.Client(
+            transport=httpx.MockTransport(
+                lambda r: httpx.Response(400, json={"error": "invalid_grant"})
+            )
+        ) as client,
         pytest.raises(HTTPException),
     ):
         GoogleCalendar(session, client).token()
@@ -293,3 +310,111 @@ def test_spring_dst(planned):
     )
     apply_remote(planned, value)
     assert (planned.ends_at - planned.starts_at).total_seconds() == 3600
+
+
+def test_refused_calendar_creation_can_be_retried(session):
+    row = connection(session)
+    row.protected_tokens = protect({"access_token": "test", "expires_at": time.time() + 1000})
+    session.commit()
+    answers = [httpx.Response(400), httpx.Response(200, json={"id": "dedicated"})]
+    with httpx.Client(transport=httpx.MockTransport(lambda r: answers.pop(0))) as client:
+        api = GoogleCalendar(session, client)
+        with pytest.raises(HTTPException):
+            api.create()
+        assert row.state == "needs_calendar"
+        api.create()
+    assert row.calendar_id == "dedicated" and row.state == "connected"
+
+
+def test_permission_403_asks_to_reconnect_but_rate_limit_does_not(session):
+    row = connection(session)
+    row.calendar_id = "dedicated"
+    row.protected_tokens = protect({"access_token": "test", "expires_at": time.time() + 1000})
+    session.commit()
+    limited = {"error": {"errors": [{"reason": "rateLimitExceeded"}]}}
+    with (
+        httpx.Client(
+            transport=httpx.MockTransport(lambda r: httpx.Response(403, json=limited))
+        ) as client,
+        pytest.raises(HTTPException) as error,
+    ):
+        GoogleCalendar(session, client).check()
+    assert error.value.status_code == 503 and row.state != "reauthorize"
+    denied = {"error": {"errors": [{"reason": "insufficientPermissions"}]}}
+    with (
+        httpx.Client(
+            transport=httpx.MockTransport(lambda r: httpx.Response(403, json=denied))
+        ) as client,
+        pytest.raises(HTTPException) as error,
+    ):
+        GoogleCalendar(session, client).check()
+    assert error.value.status_code == 409 and row.state == "reauthorize"
+
+
+def test_state_with_unicode_is_rejected_cleanly(session):
+    from app.calendar.google import finish
+
+    with (
+        httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(500))) as client,
+        pytest.raises(HTTPException) as error,
+    ):
+        finish(session, "stav-č", "code", client)
+    assert error.value.status_code == 400
+
+
+def test_microseconds_do_not_cause_phantom_changes(session, planned):
+    planned.starts_at = planned.starts_at.replace(microsecond=123456)
+    session.commit()
+    api = FakeGoogle(session)
+    synchronize(api)
+    writes = api.writes
+    assert synchronize(api) == {"changed": 0, "conflicts": 0, "skipped": []}
+    assert api.writes == writes
+
+
+def test_all_day_event_skips_one_plan_and_syncs_the_rest(session, planned):
+    profile = get_or_create_profile(session)
+    other = PlannedAction(
+        profile_id=profile.id,
+        title="Other",
+        est_hours=1,
+        week_of=planned.week_of,
+        starts_at=datetime(2026, 10, 21, 8, tzinfo=UTC),
+        ends_at=datetime(2026, 10, 21, 9, tzinfo=UTC),
+    )
+    session.add(other)
+    session.commit()
+    api = FakeGoogle(session)
+    synchronize(api)
+    api.events[planned.calendar_event_id]["start"] = {"date": "2026-10-25"}
+    other.title = "Other changed"
+    session.commit()
+    result = synchronize(api)
+    assert result["changed"] == 1 and len(result["skipped"]) == 1
+    assert api.events[other.calendar_event_id]["summary"] == "Other changed"
+
+
+def test_insert_conflict_after_lost_answer_is_accepted(session, planned):
+    api = FakeGoogle(session)
+    planned.calendar_event_id = "known-id"
+    session.commit()
+    original = api.request
+
+    def request(method, path, **kwargs):
+        if method == "POST" and "known-id" in api.events:
+            return httpx.Response(409)
+        if method == "GET" and not getattr(api, "primed", False):
+            api.primed = True  # first GET: the earlier insert is not visible yet
+            response = original(method, path, **kwargs)
+            original("POST", path, json=body_for(planned))
+            return httpx.Response(404) if response.status_code == 404 else response
+        return original(method, path, **kwargs)
+
+    def body_for(plan):
+        from app.calendar.sync import body
+
+        return body(plan, local_value(plan))
+
+    api.request = request
+    result = synchronize(api)
+    assert result["changed"] == 1 and planned.sync_base == local_value(planned)

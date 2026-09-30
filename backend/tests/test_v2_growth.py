@@ -89,6 +89,23 @@ def test_completion_changes_gaps_and_preserves_history(client):
     assert candidate["key"] in {
         i["candidate"]["key"] for i in client.get("/recommendations").json()["ranked"]
     }
+    # Completing again after the reversal hides the item again (latest decision, not any "done").
+    assert client.post("/completions", json=payload).status_code == 200
+    assert client.get("/history").json()[0]["status"] == "done"
+    assert candidate["key"] not in {
+        i["candidate"]["key"] for i in client.get("/recommendations").json()["ranked"]
+    }
+
+
+def test_demonstrated_import_needs_non_blank_result(client):
+    seed()
+    proposal = client.post("/imports/text", json={"text": "Kaggle bronze"}).json()[0]
+    payload = {
+        "item": {**ITEM, "result": "   "},
+        "evidence_kind": "demonstrated",
+        "confirmed": True,
+    }
+    assert client.post(f"/imports/{proposal['id']}/confirm", json=payload).status_code == 422
 
 
 def test_unsupported_and_malformed_imports(client):
@@ -211,3 +228,5 @@ def test_useful_feedback_survives_later_decision(client):
     client.post("/decisions", json={**target, "status": "useful"})
     client.post("/decisions", json={**target, "status": "done"})
     assert client.get("/recommendations").json()["novelty"]["explicitly_useful"] == 1
+    client.delete(f"/decisions/{target['target_type']}/{target['target_id']}")
+    assert client.get("/recommendations").json()["novelty"]["explicitly_useful"] == 0

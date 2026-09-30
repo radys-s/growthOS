@@ -1,9 +1,11 @@
 """Three-way synchronization, scoped to our dedicated calendar and owned event IDs."""
 
+import threading
 import uuid
 from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
+import httpx
 from fastapi import HTTPException
 from sqlalchemy import select
 
@@ -11,14 +13,24 @@ from app.calendar.google import GoogleCalendar
 from app.growth.locking import WRITE_LOCK
 from app.growth.models import PlannedAction
 
-SYNC_LOCK = WRITE_LOCK
+SYNC_RUNNING = threading.Lock()
+WRITE_WAIT_SECONDS = 30
+
+
+class SkipPlan(Exception):
+    """This plan cannot be synchronized now; the others still can."""
+
+
+def _utc(value: datetime) -> str:
+    # Google stores whole seconds; comparing microseconds would report phantom changes.
+    return value.astimezone(UTC).replace(microsecond=0).isoformat()
 
 
 def stamp(value: str) -> str:
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     if parsed.tzinfo is None:
         raise ValueError("Calendar time requires an offset")
-    return parsed.astimezone(UTC).isoformat()
+    return _utc(parsed)
 
 
 def local_value(plan: PlannedAction) -> dict | None:
@@ -27,8 +39,8 @@ def local_value(plan: PlannedAction) -> dict | None:
     return {
         "title": plan.title,
         "description": plan.description,
-        "starts_at": plan.starts_at.astimezone(UTC).isoformat(),
-        "ends_at": plan.ends_at.astimezone(UTC).isoformat(),
+        "starts_at": _utc(plan.starts_at),
+        "ends_at": _utc(plan.ends_at),
     }
 
 
@@ -79,89 +91,116 @@ def apply_remote(plan: PlannedAction, value: dict | None):
 
 
 def synchronize(api: GoogleCalendar, resolution: tuple[uuid.UUID, str] | None = None) -> dict:
-    if not SYNC_LOCK.acquire(blocking=False):
+    if not SYNC_RUNNING.acquire(blocking=False):
         raise HTTPException(409, "Synchronizace již běží.")
     try:
-        api.session.expire_all()
-        api.check()
-        changed = conflicts = 0
-        plans = list(api.session.scalars(select(PlannedAction)))
-        for plan in plans:
-            if resolution and plan.id != resolution[0]:
-                continue
-            local = local_value(plan)
-            if not plan.calendar_event_id and local is None:
-                continue
-            if not plan.calendar_event_id:
-                # Persist before the request: network retries reuse the same event ID.
-                plan.calendar_event_id = uuid.uuid4().hex
-                api.session.commit()
-            path = api.path("/events/" + plan.calendar_event_id)
-            response = api.request("GET", path)
-            if response.status_code in (404, 410):
-                event, remote = None, None
-            elif response.status_code == 200:
-                event = response.json()
-                if event.get("status") != "cancelled" and event.get("extendedProperties", {}).get(
-                    "private", {}
-                ).get("growthos_plan") != str(plan.id):
-                    raise HTTPException(409, "Událost nemá označení growthOS; nebudeme ji měnit.")
-                try:
-                    remote = remote_value(event)
-                except ValueError as exc:
-                    raise HTTPException(409, str(exc)) from exc
-            else:
-                raise HTTPException(502, "Google událost nelze načíst.")
-            base = plan.sync_base
-            if local == remote:
-                plan.sync_base, plan.conflict = local, None
-                if local is None:
-                    plan.calendar_event_id = None
-                api.session.commit()
-                continue
-            both_changed = local != base and remote != base
-            if plan.conflict and resolution:
-                if plan.conflict.get("remote") != remote or plan.conflict.get("local") != local:
-                    plan.conflict = {"local": local, "remote": remote}
-                    api.session.commit()
-                    raise HTTPException(409, "Od zobrazení konfliktu se data změnila. Vyber znovu.")
-                choose_remote = resolution[1] == "google"
-            elif both_changed or plan.conflict:
-                plan.conflict = {"local": local, "remote": remote}
-                conflicts += 1
-                api.session.commit()
-                continue
-            else:
-                choose_remote = remote != base
-            if choose_remote:
-                apply_remote(plan, remote)
-            elif local is None:
-                if event and remote is not None:
-                    result = api.request("DELETE", path, headers={"If-Match": event["etag"]})
-                    if result.status_code not in (204, 404, 410):
-                        raise HTTPException(409, "Událost se změnila; zopakuj synchronizaci.")
-                plan.calendar_event_id = None
-                plan.sync_base, plan.conflict = None, None
-            else:
-                if event is None or remote is None:
-                    if event is not None or base is not None:
-                        plan.calendar_event_id = uuid.uuid4().hex
-                        api.session.commit()
-                    result = api.request("POST", api.path("/events"), json=body(plan, local))
-                else:
-                    payload = body(plan, local)
-                    payload.pop("id")
-                    result = api.request(
-                        "PATCH", path, json=payload, headers={"If-Match": event["etag"]}
-                    )
-                if result.status_code not in (200, 201):
-                    raise HTTPException(
-                        409,
-                        "Zápis nebyl potvrzen. Zopakuj synchronizaci; data zůstávají zachována.",
-                    )
-                plan.sync_base, plan.conflict = local, None
-            changed += 1
-            api.session.commit()
-        return {"changed": changed, "conflicts": conflicts}
+        if not WRITE_LOCK.acquire(timeout=WRITE_WAIT_SECONDS):
+            raise HTTPException(409, "Právě probíhá jiná změna. Zkus synchronizaci za chvíli.")
+        try:
+            return _synchronize(api, resolution)
+        finally:
+            WRITE_LOCK.release()
     finally:
-        SYNC_LOCK.release()
+        SYNC_RUNNING.release()
+
+
+def _fetch(api: GoogleCalendar, plan: PlannedAction, path: str) -> tuple[dict | None, dict | None]:
+    response = api.request("GET", path)
+    if response.status_code in (404, 410):
+        return None, None
+    if response.status_code != 200:
+        raise HTTPException(502, "Google událost nelze načíst.")
+    event = response.json()
+    owner = event.get("extendedProperties", {}).get("private", {}).get("growthos_plan")
+    if event.get("status") != "cancelled" and owner != str(plan.id):
+        raise SkipPlan(f"„{plan.title}“: událost nemá označení growthOS; nebudeme ji měnit.")
+    try:
+        return event, remote_value(event)
+    except ValueError as exc:
+        raise SkipPlan(f"„{plan.title}“: {exc}") from exc
+
+
+def _synchronize(api: GoogleCalendar, resolution: tuple[uuid.UUID, str] | None) -> dict:
+    api.session.expire_all()
+    api.check()
+    changed = conflicts = 0
+    skipped: list[str] = []
+    plans = list(api.session.scalars(select(PlannedAction)))
+    for plan in plans:
+        if resolution and plan.id != resolution[0]:
+            continue
+        local = local_value(plan)
+        if not plan.calendar_event_id and local is None:
+            continue
+        if not plan.calendar_event_id:
+            # Persist before the request: network retries reuse the same event ID.
+            plan.calendar_event_id = uuid.uuid4().hex
+            api.session.commit()
+        path = api.path("/events/" + plan.calendar_event_id)
+        try:
+            event, remote = _fetch(api, plan, path)
+        except SkipPlan as exc:
+            if resolution:
+                raise HTTPException(409, str(exc)) from exc
+            skipped.append(str(exc))
+            continue
+        base = plan.sync_base
+        if local == remote:
+            plan.sync_base, plan.conflict = local, None
+            if local is None:
+                plan.calendar_event_id = None
+            api.session.commit()
+            continue
+        both_changed = local != base and remote != base
+        if plan.conflict and resolution:
+            if plan.conflict.get("remote") != remote or plan.conflict.get("local") != local:
+                plan.conflict = {"local": local, "remote": remote}
+                api.session.commit()
+                raise HTTPException(409, "Od zobrazení konfliktu se data změnila. Vyber znovu.")
+            choose_remote = resolution[1] == "google"
+        elif both_changed or plan.conflict:
+            plan.conflict = {"local": local, "remote": remote}
+            conflicts += 1
+            api.session.commit()
+            continue
+        else:
+            choose_remote = remote != base
+        if choose_remote:
+            apply_remote(plan, remote)
+        elif local is None:
+            if event and remote is not None:
+                result = api.request("DELETE", path, headers={"If-Match": event["etag"]})
+                if result.status_code not in (204, 404, 410):
+                    raise HTTPException(409, "Událost se změnila; zopakuj synchronizaci.")
+            plan.calendar_event_id = None
+            plan.sync_base, plan.conflict = None, None
+        else:
+            if event is None or remote is None:
+                if event is not None or base is not None:
+                    plan.calendar_event_id = uuid.uuid4().hex
+                    api.session.commit()
+                    path = api.path("/events/" + plan.calendar_event_id)
+                result = api.request("POST", api.path("/events"), json=body(plan, local))
+                if result.status_code == 409:
+                    # The ID already exists: an earlier insert landed but its answer was lost.
+                    try:
+                        event, remote = _fetch(api, plan, path)
+                    except SkipPlan:
+                        event, remote = None, None
+                    if remote == local:
+                        result = httpx.Response(200)
+            else:
+                payload = body(plan, local)
+                payload.pop("id")
+                result = api.request(
+                    "PATCH", path, json=payload, headers={"If-Match": event["etag"]}
+                )
+            if result.status_code not in (200, 201):
+                raise HTTPException(
+                    409,
+                    "Zápis nebyl potvrzen. Zopakuj synchronizaci; data zůstávají zachována.",
+                )
+            plan.sync_base, plan.conflict = local, None
+        changed += 1
+        api.session.commit()
+    return {"changed": changed, "conflicts": conflicts, "skipped": skipped}

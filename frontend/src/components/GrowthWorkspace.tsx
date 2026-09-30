@@ -966,7 +966,10 @@ export default function GrowthWorkspace({
                   await loadWeek();
                   await loadCalendar();
                   setMessage(
-                    `Synchronizováno ${result.changed} změn; konflikty: ${result.conflicts}. Konflikty vyřešíš níže.`,
+                    `Synchronizováno ${result.changed} změn; konflikty: ${result.conflicts}. Konflikty vyřešíš níže.` +
+                      (result.skipped.length
+                        ? ` Přeskočeno: ${result.skipped.join(" ")}`
+                        : ""),
                   );
                 })
               }

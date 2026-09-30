@@ -7,6 +7,7 @@ from urllib.parse import quote, urlencode
 
 import httpx
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.calendar.models import CalendarConnection
@@ -15,15 +16,31 @@ from app.config import get_settings
 
 SCOPE = "https://www.googleapis.com/auth/calendar.app.created"
 TOKEN_URL = "https://oauth2.googleapis.com/token"
+# 403 reasons that mean "slow down", not "missing permission"
+RATE_LIMIT_REASONS = {"rateLimitExceeded", "userRateLimitExceeded", "quotaExceeded"}
 
 
 def connection(session: Session) -> CalendarConnection:
     row = session.get(CalendarConnection, 1)
     if row is None:
-        row = CalendarConnection(id=1)
-        session.add(row)
-        session.commit()
+        session.add(CalendarConnection(id=1))
+        try:
+            session.commit()
+        except IntegrityError:  # a concurrent first request created it
+            session.rollback()
+        row = session.get(CalendarConnection, 1)
     return row
+
+
+def _error_reason(response: httpx.Response) -> str:
+    try:
+        error = response.json().get("error", {})
+    except ValueError:
+        return ""
+    if isinstance(error, str):  # OAuth token endpoint: {"error": "invalid_grant"}
+        return error
+    errors = error.get("errors") or [{}]
+    return errors[0].get("reason", "") if isinstance(errors[0], dict) else ""
 
 
 def begin(session: Session) -> str:
@@ -58,8 +75,10 @@ def begin(session: Session) -> str:
 def finish(session: Session, state: str, code: str, client: httpx.Client):
     row = connection(session)
     pending = reveal(row.protected_oauth) if row.protected_oauth else {}
+    expected = pending.get("state", "")
     if (
-        not secrets.compare_digest(state, pending.get("state", ""))
+        not expected
+        or not secrets.compare_digest(state.encode(), expected.encode())
         or pending.get("expires", 0) < time.time()
     ):
         raise HTTPException(400, "Přihlášení vypršelo nebo má neplatný stav. Připoj účet znovu.")
@@ -117,11 +136,23 @@ class GoogleCalendar:
                     "client_secret": settings.google_client_secret,
                 },
             )
-            if response.status_code != 200:
+            if response.status_code in (400, 401) and _error_reason(response) == "invalid_grant":
                 self.row.state = "reauthorize"
                 self.session.commit()
                 raise HTTPException(409, "Platnost přihlášení skončila. Připoj Google znovu.")
-            token.update(response.json())
+            if response.status_code != 200:
+                if response.status_code < 500:
+                    raise HTTPException(
+                        409, "Google odmítl údaje aplikace. Zkontroluj GOOGLE_CLIENT_* v .env."
+                    )
+                raise HTTPException(503, "Google přihlášení je dočasně nedostupné. Zkus později.")
+            try:
+                fresh = response.json()
+            except ValueError:
+                fresh = {}
+            if not fresh.get("access_token"):
+                raise HTTPException(503, "Google vrátil neúplnou odpověď. Zkus později.")
+            token.update(fresh)
             token["expires_at"] = time.time() + token.get("expires_in", 3600)
             self.row.protected_tokens = protect(token)
             self.session.commit()
@@ -137,6 +168,10 @@ class GoogleCalendar:
             self.row.state = "reauthorize"
             self.session.commit()
             raise HTTPException(409, "Připoj Google účet znovu.")
+        if response.status_code == 403 and _error_reason(response) not in RATE_LIMIT_REASONS:
+            self.row.state = "reauthorize"
+            self.session.commit()
+            raise HTTPException(409, "Google odepřel přístup. Připoj správný účet znovu.")
         if response.status_code in (403, 429) or response.status_code >= 500:
             raise HTTPException(503, "Google synchronizace je dočasně nedostupná. Zkus ji později.")
         return response
@@ -171,18 +206,31 @@ class GoogleCalendar:
             "marker": self.row.metadata_json.get("marker") or uuid.uuid4().hex,
         }
         self.session.commit()
-        response = self.request(
-            "POST",
-            "calendars",
-            json={
-                "summary": "growthOS",
-                "timeZone": "Europe/Prague",
-                "description": "growthOS integration " + self.row.metadata_json["marker"],
-            },
-        )
+        try:
+            response = self.request(
+                "POST",
+                "calendars",
+                json={
+                    "summary": "growthOS",
+                    "timeZone": "Europe/Prague",
+                    "description": "growthOS integration " + self.row.metadata_json["marker"],
+                },
+            )
+        except HTTPException as exc:
+            if exc.status_code == 409:  # 401/403: Google refused, nothing was created
+                self._abandon_creation(self.row.state)
+            raise
         if response.status_code != 200:
+            # A definite client error means nothing was created; unblock a new attempt.
+            if 400 <= response.status_code < 500:
+                self._abandon_creation("needs_calendar")
             raise HTTPException(502, "Vytvoření kalendáře nebylo potvrzeno.")
         self.row.calendar_id = response.json()["id"]
         self.row.state = "connected"
+        self.row.metadata_json = {**self.row.metadata_json, "creation_pending": False}
+        self.session.commit()
+
+    def _abandon_creation(self, state: str):
+        self.row.state = state
         self.row.metadata_json = {**self.row.metadata_json, "creation_pending": False}
         self.session.commit()

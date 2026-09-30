@@ -18,7 +18,6 @@ Candidates = open opportunities (as `apply` actions) + curated growth actions.
 | Country | profile country not in `eligibility.countries` |
 | Cost | `cost_eur > max_cost_eur` |
 | Decision | latest decision is `done`, `skipped` or `not_interested` |
-| Credential value | certification whose credential tier (§6) is `Ignore` — "Nízká hodnota certifikátu pro tvůj cíl". Runs after the factors, because the tier depends on the goal. |
 
 Unknown eligibility **passes** but lowers Probability and adds an "unverified eligibility" warning.
 
