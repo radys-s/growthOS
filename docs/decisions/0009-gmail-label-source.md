@@ -26,8 +26,9 @@ The LLM only proposes. Code verifies deterministically:
 - an achievement date is kept only when it is in the quote and not in the future.
 
 Opportunities are stored with source `gmail`, unverified eligibility and the permalink as
-evidence; they are not closed by later runs. When the URL matches an open opportunity from
-another source without a deadline, the verified deadline and quote are added there instead of a
+evidence; they are not closed by later runs. When the URL matches an open opportunity (any$
+source, including an earlier mail) without a deadline, the verified deadline and quote are added
+there instead of a
 duplicate. Achievements become import proposals: they change nothing until the user confirms
 them, and demonstrated evidence still needs an explicit result (ADR 0007).
 

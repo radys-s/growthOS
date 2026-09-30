@@ -165,11 +165,11 @@ def check_achievement(claim: MailAchievement, message: MailMessage) -> dict | No
 
 
 def _known(session: Session, url: str) -> Opportunity | None:
-    """An open opportunity from another source with this URL (tolerating a trailing slash)."""
+    """An open opportunity with this URL (tolerating a trailing slash), from any source,
+    so a second mail about the same opportunity only fills in a missing deadline."""
     return session.scalars(
         select(Opportunity).where(
             Opportunity.status == "open",
-            Opportunity.source != SOURCE,
             Opportunity.url.in_({url, url.rstrip("/"), url.rstrip("/") + "/"}),
         )
     ).first()

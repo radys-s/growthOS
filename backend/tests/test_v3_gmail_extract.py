@@ -209,3 +209,18 @@ def test_gmail_run_requires_enabled_source(client, monkeypatch):
         "app.sources.runner.get_settings", lambda: Settings(sources_enabled="gmail")
     )
     assert client.post("/gmail/run").json()["status"] == "not_configured"
+
+
+def test_second_mail_about_same_url_fills_deadline_only(session):
+    first = good_answer()
+    first.achievements = []
+    first.opportunities[0].deadline_date = None
+    first.opportunities[0].quote = "Czech AI Society pořádá AI Hackathon Brno."
+    second = good_answer()
+    second.achievements = []
+    second.opportunities[0].title = "Hackathon Brno 2026"
+    process_gmail(session, FakeLLM(first), FakeGmail([message("m1")]), SETTINGS, NOW)
+    report = process_gmail(session, FakeLLM(second), FakeGmail([message("m2")]), SETTINGS, NOW)
+    assert report.opportunities == 0 and report.deadlines == 1
+    row = session.scalars(select(Opportunity)).one()
+    assert row.deadline_at is not None and row.source_ref == "m1:0"
