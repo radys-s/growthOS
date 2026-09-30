@@ -16,6 +16,7 @@ from app.common import utcnow
 from app.config import get_settings
 from app.db import check_database, engine
 from app.decisions.router import router as decisions_router
+from app.gmail.router import router as gmail_router
 from app.goals.router import router as goals_router
 from app.growth.router import router as growth_router
 from app.opportunities.router import router as opportunities_router
@@ -55,6 +56,7 @@ app.add_middleware(
 
 
 app.include_router(calendar_router)
+app.include_router(gmail_router)
 app.include_router(growth_router)
 app.include_router(profile_router)
 app.include_router(goals_router)
