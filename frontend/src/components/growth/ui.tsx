@@ -16,7 +16,7 @@ export const emptyItem: ItemInput = {
   achieved_on: null,
 };
 
-export type WorkspaceTab = "imports" | "complete" | "plan" | "history" | "calendar";
+export type WorkspaceTab = "imports" | "complete" | "plan" | "history" | "calendar" | "gmail";
 
 /** Shared busy / message / error handling that every tab reports through. */
 export type Workspace = {

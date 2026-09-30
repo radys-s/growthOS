@@ -34,6 +34,18 @@ from app.profile.service import get_or_create_profile
 router = APIRouter(tags=["growth"])
 
 
+@router.get("/imports", response_model=list[ProposalOut])
+def pending_proposals(session: DbSession, source: str | None = None):
+    """Unconfirmed proposals, newest first (e.g. achievements found in Gmail)."""
+    profile = get_or_create_profile(session)
+    query = select(ImportProposal).where(
+        ImportProposal.profile_id == profile.id, ImportProposal.confirmed_item_id.is_(None)
+    )
+    if source:
+        query = query.where(ImportProposal.source == source)
+    return list(session.scalars(query.order_by(ImportProposal.created_at.desc()).limit(100)))
+
+
 @router.post("/imports/text", response_model=list[ProposalOut])
 def text_preview(data: TextImport, session: DbSession):
     with WRITE_LOCK:

@@ -149,6 +149,14 @@ def _run_gmail(
     return report, gmail
 
 
+def run_gmail(session: Session, now: datetime) -> SourceReport:
+    """Only the Gmail step (the Gmail tab's "read now"); serialized with full runs."""
+    with _RUN_LOCK, make_client() as client:
+        report, _ = _run_gmail(session, get_provider(get_settings(), client), client, now)
+        _record(session, report, now)
+        return report
+
+
 def run_sources(
     session: Session,
     now: datetime,

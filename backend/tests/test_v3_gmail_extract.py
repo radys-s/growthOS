@@ -193,3 +193,19 @@ def test_known_opportunity_gets_the_deadline(session):
 def test_sources_list_gmail_as_not_configured(client):
     rows = {row["id"]: row for row in client.get("/sources").json()}
     assert rows["gmail"]["configured"] is False and rows["gmail"]["enabled"] is False
+
+
+def test_pending_gmail_proposals_are_listed(client, session):
+    process_gmail(session, FakeLLM(good_answer()), FakeGmail([message()]), SETTINGS, NOW)
+    rows = client.get("/imports", params={"source": "gmail"}).json()
+    assert [r["proposed"]["title"] for r in rows] == ["Datathon 2026"]
+    assert client.get("/imports", params={"source": "cv"}).json() == []
+
+
+def test_gmail_run_requires_enabled_source(client, monkeypatch):
+    assert client.post("/gmail/run").status_code == 409
+    monkeypatch.setattr("app.gmail.router.get_settings", lambda: Settings(sources_enabled="gmail"))
+    monkeypatch.setattr(
+        "app.sources.runner.get_settings", lambda: Settings(sources_enabled="gmail")
+    )
+    assert client.post("/gmail/run").json()["status"] == "not_configured"
