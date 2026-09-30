@@ -278,3 +278,23 @@ export type CalendarStatus = {
 };
 export type CalendarConnect = { authorization_url: string };
 export type CalendarSync = { changed: number; conflicts: number; skipped: string[] };
+
+// backend/app/gmail/router.py
+export type GmailStatus = {
+  configured: boolean;
+  llm_configured: boolean;
+  enabled: boolean;
+  state: string;
+  detail: string | null;
+  label: string;
+  processed: number;
+};
+export type GmailConnect = { authorization_url: string };
+// backend/app/sources/runner.py SourceReport
+export type SourceReport = {
+  source: string;
+  status: SourceRunStatus;
+  fetched: number;
+  result: { created: number; updated: number } | null;
+  error: string | null;
+};

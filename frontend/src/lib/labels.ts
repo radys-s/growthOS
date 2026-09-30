@@ -80,6 +80,14 @@ export const ORIGIN_LABELS: Record<string, string> = {
   curated: "Kurátorské",
   devpost: "Devpost",
   kaggle: "Kaggle",
+  gmail: "Gmail",
+};
+
+/** Where an import proposal came from. */
+export const PROPOSAL_SOURCE_LABELS: Record<string, string> = {
+  cv: "CV",
+  github: "GitHub",
+  gmail: "Gmail",
 };
 
 export const TIER_TONE: Record<Tier, string> = {
@@ -94,6 +102,8 @@ export const TIER_TONE: Record<Tier, string> = {
 export const SOURCE_SETUP_HINT: Record<string, string> = {
   kaggle: "Doplň KAGGLE_USERNAME a KAGGLE_KEY do backend/.env (kaggle.com → Settings → API).",
   deadline_watch: "Doplň LLM_BASE_URL (OmniRoute) a LLM_API_KEY do backend/.env a spusť OmniRoute.",
+  gmail:
+    "Připoj Gmail v pracovním prostoru (záložka Gmail) a doplň LLM_BASE_URL; čte jen zprávy se štítkem.",
 };
 
 const PRAGUE_TIME = new Intl.DateTimeFormat("cs-CZ", {

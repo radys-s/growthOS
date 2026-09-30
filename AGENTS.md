@@ -10,10 +10,11 @@ Not a job board. Opportunity Radar is one module.
 
 ## Current focus
 
-**V2: evidence, imports, progress and weekly planning.** M1 and V1 are implemented. Keep CV and
-GitHub analysis local and rule-based. Imported claims do not increase coverage until the user
-confirms a demonstrated result. Google integration touches only its own dedicated calendar.
-See ADRs 0007 and 0008 and [roadmap](docs/roadmap.md).
+**V3: Gmail label source.** M1, V1 and V2 are implemented. Keep CV and GitHub analysis local and
+rule-based. Only Gmail messages with the user's label may go to the LLM, and every extracted claim
+needs a verbatim quote checked by code (ADR 0009). Imported claims do not increase coverage until
+the user confirms a demonstrated result. Google Calendar touches only its own dedicated calendar.
+See ADRs 0007–0009 and [roadmap](docs/roadmap.md).
 
 ## Layout
 

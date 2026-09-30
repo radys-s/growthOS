@@ -73,9 +73,26 @@ tracked separately.
 - [ ] Live Google synchronization after OAuth client setup and account authorization
 - [ ] Tomáš's qualitative assessment of recommendation quality with his real profile
 
+Independent review of V2 (2026-09-30, Claude): fixed completion after undo, OAuth refresh and
+error mapping, stuck calendar creation, sync of foreign/all-day events and lost POST responses,
+blank demonstrated results and plan ordering; Devpost no longer dominates Top 5 (at most two
+items from automatic sources) and the workspace is split into per-tab components.
+
+## V3 — Gmail label source
+
+Decisions (2026-09-30): only messages with one label are read; the label is consent that their
+text may go to the LLM (ADR 0009, amends ADR 0007).
+
+- [x] Shared Google OAuth module; separate read-only Gmail grant with its own connection
+- [x] Gmail client: label → messages (365 days), plain text or HTML text + links, no attachments
+- [x] LLM extraction with deterministic verification (verbatim quote, date in quote, URL /
+  organizer / result present in the mail); each message goes to the LLM once, failures retry
+- [x] Opportunities (source `gmail`), deadlines for known opportunities, achievement proposals
+- [x] Gmail tab, source badges on proposals and opportunities, sources panel row
+- [ ] Live Gmail authorization and a real labelled mailbox run (needs Tomáš's OAuth client + LLM)
+
 ## Later
 
-- V3: Gmail source adapter (extraction → opportunity / deadline / achievement)
 - V4: Career Strategist — long-horizon roadmap that re-plans
 
 ## Open questions

@@ -10,13 +10,16 @@ Competitions, olympiads, hackathons, internships, research programs, scholarship
 certifications and strong technical projects — ranked by what actually moves *my* profile toward
 *my* goal, with an explanation for every recommendation.
 
-**Status:** V2 is implemented locally; Google live authorization still requires OAuth credentials.
+**Status:** V3 (Gmail label source) is implemented locally; live Google authorization still requires
+OAuth credentials.
 - **M1:** profile + goal → curated opportunities and growth actions → deterministic ranking →
   Top 5 with reasons, factor breakdown and decision buttons.
 - **V1:** Devpost + Kaggle sources, an LLM deadline watcher with quote verification, and
   S/A/B/C tiers for certifications.
 - **V2:** local CV/public GitHub proposals, confirmed outcomes and provenance, history and
   progress snapshots, a weekly plan, and a dedicated Google calendar with conflict handling.
+- **V3:** read-only Gmail limited to one label; the LLM proposes opportunities, deadlines and
+  achievements, and code keeps only claims backed by a verbatim quote.
 
 See [roadmap](docs/roadmap.md).
 
@@ -92,6 +95,15 @@ Windows account that runs the backend. If calendar creation loses its response, 
 calendar ID from Google settings. If the calendar was actually deleted, explicitly replace it;
 plans and completed evidence stay in growthOS. An uncertain opportunity deadline is never
 automatically added as a confirmed event.
+
+Gmail is optional too (ADR 0009). In the same OAuth client enable the Gmail API and add the
+redirect URI `http://127.0.0.1:8000/gmail/callback`. In Gmail create the label `growthOS` (or set
+`GMAIL_LABEL`) and a filter that applies it to competition, internship and result e-mails. Open
+`/growth?tab=gmail` and connect; the grant is separate from the calendar and uses only
+`gmail.readonly`. Only labelled messages from the last year are read, without attachments, and
+their text (max. 12k characters) **is sent to the configured LLM** (OmniRoute). Only verified
+quotes, message ids and derived items are stored. Found achievements wait in Importy for your
+confirmation. Without `LLM_BASE_URL` nothing is read.
 
 Text PDF, DOCX and pasted CV text are supported. Scanned PDFs require pasted text. CV and GitHub
 content is parsed locally and stored only as reviewable excerpts in the local database; it is never

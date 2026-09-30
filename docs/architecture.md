@@ -47,6 +47,8 @@ no Redis/Celery, no multi-agent architecture until a concrete need proves otherw
 | `ai/` | LLM provider interface + OpenAI-compatible client (OmniRoute); extraction only, never scoring |
 | `growth/` | Local import previews, confirmed outcomes, progress snapshots and weekly plans |
 | `calendar/` | Dedicated Google calendar OAuth, protected tokens and three-way synchronization |
+| `google/` | Shared Google OAuth (PKCE, DPAPI tokens, refresh, error mapping) for calendar and Gmail |
+| `gmail/` | Read-only Gmail limited to one label; LLM extraction with deterministic quote verification (ADR 0009) |
 
 Rules:
 
@@ -77,3 +79,12 @@ Completion adds a decision event and two progress snapshots. Undo appends a reve
 The weekly plan stores work estimates and optional UTC schedule; the UI displays Prague time.
 Calendar sync uses a dedicated Google calendar and compares local and Google values against the
 last acknowledged value, presenting a conflict choice when both changed. See ADRs 0007 and 0008.
+
+## V3 Gmail flow
+
+After the source adapters and the deadline watcher, the runner's Gmail step lists messages with
+the user's label, skips ids already processed, and sends each new body to the LLM with a
+structured schema. Code keeps only claims whose quote is verbatim in the message; dates, URLs,
+organizers and results must appear there too. Opportunities are inserted (or fill a missing
+deadline of a known opportunity with the same URL); achievements become import proposals for the
+user to confirm. See ADR 0009.

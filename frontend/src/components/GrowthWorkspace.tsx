@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import CalendarTab from "./growth/CalendarTab";
 import CompleteTab from "./growth/CompleteTab";
+import GmailTab from "./growth/GmailTab";
 import HistoryTab from "./growth/HistoryTab";
 import ImportsTab from "./growth/ImportsTab";
 import PlanTab from "./growth/PlanTab";
@@ -13,6 +14,7 @@ const TABS: [WorkspaceTab, string][] = [
   ["plan", "Týdenní plán"],
   ["history", "Historie a progres"],
   ["calendar", "Google kalendář"],
+  ["gmail", "Gmail"],
 ];
 
 export default function GrowthWorkspace({
@@ -93,6 +95,7 @@ export default function GrowthWorkspace({
       {tab === "plan" && <PlanTab ws={ws} target={target} />}
       {tab === "history" && <HistoryTab ws={ws} />}
       {tab === "calendar" && <CalendarTab ws={ws} />}
+      {tab === "gmail" && <GmailTab ws={ws} />}
     </main>
   );
 }

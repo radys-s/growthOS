@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { growthApi } from "@/lib/growth-api";
+import { PROPOSAL_SOURCE_LABELS } from "@/lib/labels";
 import type { ImportProposal, ProfileItem } from "@/lib/types";
 import EvidenceForm from "./EvidenceForm";
 import { button, field, Label, Panel, type Workspace } from "./ui";
@@ -9,6 +10,14 @@ import { button, field, Label, Panel, type Workspace } from "./ui";
 export default function ImportsTab({ ws }: { ws: Workspace }) {
   const [proposals, setProposals] = useState<ImportProposal[]>([]);
   const [active, setActive] = useState<ImportProposal | null>(null);
+  const { fail } = ws;
+
+  // Proposals waiting from earlier imports or found in labelled Gmail messages.
+  useEffect(() => {
+    growthApi<ImportProposal[]>("/imports")
+      .then(setProposals)
+      .catch(() => fail("Backend neodpovídá. Spusť growthOS a obnov stránku."));
+  }, [fail]);
 
   async function preview(event: FormEvent<HTMLFormElement>, kind: "text" | "file" | "github") {
     event.preventDefault();
@@ -21,7 +30,8 @@ export default function ImportsTab({ ws }: { ws: Workspace }) {
             ? { text: form.get("text") }
             : { repository: form.get("repository") };
       const rows = await growthApi<ImportProposal[]>(`/imports/${kind}`, "POST", body);
-      setProposals(rows);
+      const fresh = new Set(rows.map((r) => r.id));
+      setProposals((old) => [...rows, ...old.filter((p) => !fresh.has(p.id))]);
       setActive(null);
       ws.notify(`${rows.length} návrhů k posouzení. Profil se zatím nezměnil.`);
     });
@@ -80,6 +90,9 @@ export default function ImportsTab({ ws }: { ws: Workspace }) {
                 disabled={!!p.confirmed_item_id}
                 onClick={() => setActive(p)}
               >
+                <span className="mr-2 rounded bg-white/10 px-1.5 py-0.5 text-xs text-zinc-300">
+                  {PROPOSAL_SOURCE_LABELS[p.source] ?? p.source}
+                </span>
                 {p.proposed.title}
                 <span className="ml-2 text-xs text-zinc-400">
                   {p.confirmed_item_id ? "Potvrzeno" : "Posoudit →"}

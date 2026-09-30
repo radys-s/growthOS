@@ -152,3 +152,15 @@ One row per source (and the deadline watcher) per run: `source`, `ran_at`, `stat
 - `CalendarConnection` stores the dedicated calendar ID, connection state, and DPAPI-protected
   OAuth tokens. `/calendar/status`, `/connect`, `/callback`, `/create`, `/sync`, `/conflicts`,
   `/recover` and `/replace-missing` operate only on this calendar.
+
+## V3 additions (ADR 0009)
+
+- `GmailConnection` (single row): separate read-only Gmail grant, state and DPAPI-protected tokens.
+  `/gmail/status`, `/connect`, `/callback`, `/disconnect`, `/run`.
+- `GmailMessage`: ids of labelled messages already sent to the LLM (status, found count, error).
+  Bodies are never stored.
+- Opportunities from mail have `source="gmail"`, `source_ref="<messageId>:<n>"`, the Gmail
+  permalink as `evidence_url` and, when verified, `deadline_source="extracted"` with the quote.
+  They are not closed by later runs.
+- Achievements become `ImportProposal(source="gmail")`; `GET /imports?source=` lists the
+  unconfirmed proposals.

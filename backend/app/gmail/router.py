@@ -4,12 +4,14 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy import func, select
 
+from app.common import utcnow
 from app.config import get_settings
 from app.db import DbSession
 from app.gmail.client import SCOPE, connection
 from app.gmail.models import GmailMessage
 from app.google import oauth
 from app.growth.locking import WRITE_LOCK
+from app.sources.runner import SourceReport, run_gmail
 
 router = APIRouter(prefix="/gmail", tags=["gmail"])
 
@@ -90,3 +92,11 @@ def disconnect(session: DbSession):
         row.detail = None
         session.commit()
         return status(session)
+
+
+@router.post("/run", response_model=SourceReport)
+def run(session: DbSession):
+    """Read new labelled messages now (also part of every source run)."""
+    if "gmail" not in get_settings().enabled_sources:
+        raise HTTPException(409, "Gmail není v SOURCES_ENABLED.")
+    return run_gmail(session, utcnow())
