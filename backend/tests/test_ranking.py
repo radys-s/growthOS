@@ -236,6 +236,21 @@ def test_diversity_max_two_per_kind_and_backfill() -> None:
     assert len(diversify(items, 5)) == 5
 
 
+def test_diversity_caps_automatic_sources() -> None:
+    feed = [
+        score(_cand(f"d{i}", kind=f"k{i}", origin="devpost", cv_signal=5), PROFILE, GOAL, NOW, TAX)
+        for i in range(4)
+    ]
+    curated = [
+        score(_cand(f"c{i}", kind=f"c{i}", origin="curated", cv_signal=1), PROFILE, GOAL, NOW, TAX)
+        for i in range(3)
+    ]
+    items = sorted(feed + curated, key=lambda i: -i.priority)
+    top = diversify(items, 5)
+    assert sum(i.candidate.origin == "devpost" for i in top) == 2
+    assert {"c0", "c1", "c2"} <= {i.candidate.key for i in top}
+
+
 def test_top_n_limit() -> None:
     candidates = [_cand(f"k{i}", kind=f"kind{i}") for i in range(8)]
     assert len(rank(candidates, PROFILE, GOAL, NOW, top_n=5).top) == 5
