@@ -20,6 +20,7 @@ PENALTIES = ("effort", "cost")
 DEFAULT_WEEKLY_HOURS = 5  # used when the profile has no weekly budget
 HIDING_DECISIONS = {"done", "skipped", "not_interested"}
 MAX_PER_KIND = 2
+MAX_AGGREGATED = 2  # Top N items from automatic sources (Devpost, Kaggle, …)
 MIN_REASON_CONTRIBUTION = 0.02
 # A factor must also be genuinely high to be quoted as a reason (e.g. the unknown-CV default 0.4
 # or the no-deadline urgency 0.2 must never read as "strong CV signal" / "deadline is near").
@@ -366,15 +367,22 @@ def _sort_key(item: RankedItem) -> tuple[float, float, str, str]:
 def diversify(
     ranked: list[RankedItem], n: int, max_per_kind: int = MAX_PER_KIND
 ) -> list[RankedItem]:
-    """Greedy Top N with at most ``max_per_kind`` of one kind; backfills if the list runs short."""
+    """Greedy Top N with at most ``max_per_kind`` of one kind and ``MAX_AGGREGATED`` items from
+    automatic sources, so near-identical feed items cannot crowd out curated ones; backfills if
+    the list runs short."""
     top: list[RankedItem] = []
     per_kind: dict[str, int] = {}
+    aggregated = 0
     for item in ranked:
         if len(top) == n:
             break
-        if per_kind.get(item.candidate.kind, 0) < max_per_kind:
+        is_aggregated = item.candidate.origin not in (None, "curated")
+        if per_kind.get(item.candidate.kind, 0) < max_per_kind and not (
+            is_aggregated and aggregated >= MAX_AGGREGATED
+        ):
             top.append(item)
             per_kind[item.candidate.kind] = per_kind.get(item.candidate.kind, 0) + 1
+            aggregated += is_aggregated
     if len(top) < n:
         chosen = {item.candidate.key for item in top}
         top += [item for item in ranked if item.candidate.key not in chosen][: n - len(top)]

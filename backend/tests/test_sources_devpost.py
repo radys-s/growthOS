@@ -89,6 +89,8 @@ def test_fetch_filters_and_maps() -> None:
     assert amazon.cost_eur is None
     assert amazon.cv_signal == 3  # prize >= 10k USD
     assert {"hackathon_result", "teamwork", "deep_learning"} <= set(amazon.signals)
+    assert "public_portfolio" not in amazon.signals
+    assert amazon.est_hours == 36
     assert str(amazon.evidence_url) == str(amazon.url)
 
     assert items["31493"].cv_signal == 1  # ₹ prize is not converted, 36 registrations
@@ -99,7 +101,7 @@ def test_fetch_filters_and_maps() -> None:
 
 @pytest.mark.parametrize(
     ("prize", "registrations", "expected"),
-    [(50_000, 10, 3), (2_000, 10, 2), (None, 500, 2), (None, None, 1), (500, 100, 1)],
+    [(50_000, 10, 3), (2_000, 10, 2), (None, 1_500, 2), (None, 500, 1), (None, None, 1)],
 )
 def test_cv_signal(prize: float | None, registrations: int | None, expected: int) -> None:
     assert _cv_signal(prize, registrations) == expected

@@ -54,8 +54,13 @@ Weights come from the goal (template defaults below, editable per goal). Each we
 ## 4. Top N and diversity
 
 Sort by priority (ties: earlier deadline, then title). Greedy pick for Top N (default 5) with
-**max 2 items of the same kind**; if that leaves the list short, it is backfilled from the
-ranked list. The full ranked list is returned as well.
+**max 2 items of the same kind** and **max 2 items from automatic sources** (Devpost, Kaggle, …;
+curated items and growth actions are not capped); if that leaves the list short, it is backfilled
+from the ranked list. The full ranked list is returned as well.
+
+Automatic-source defaults (V2 tuning): Devpost items get `est_hours = 36` and no
+`public_portfolio` signal (a submission is not a maintained public project). Their CV signal is 3
+for a prize pool ≥ 10k USD, 2 for ≥ 1k USD or ≥ 1000 registrations, else 1.
 
 ## 5. Explanations
 

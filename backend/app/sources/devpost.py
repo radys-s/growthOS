@@ -36,7 +36,9 @@ THEME_SIGNALS = {
     "DevOps": ["cloud", "deployment"],
     "Serverless": ["cloud", "deployment"],
 }
-BASE_SIGNALS = ["hackathon_result", "teamwork", "presentation", "public_portfolio"]
+# No public_portfolio: a submission is not evidence of a public, maintained project.
+BASE_SIGNALS = ["hackathon_result", "teamwork", "presentation"]
+EST_HOURS = 36  # a typical online hackathon weekend; the list never publishes effort
 
 MONTHS = {m: i for i, m in enumerate(
     ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], start=1
@@ -83,7 +85,7 @@ def _cv_signal(prize_usd: float | None, registrations: int | None) -> int:
     """Big prize pool = strong field and a recognisable result; tiny events barely register."""
     if prize_usd is not None and prize_usd >= 10_000:
         return 3
-    if (prize_usd is not None and prize_usd >= 1_000) or (registrations or 0) >= 300:
+    if (prize_usd is not None and prize_usd >= 1_000) or (registrations or 0) >= 1_000:
         return 2
     return 1
 
@@ -120,6 +122,7 @@ def to_opportunity(raw: dict[str, Any], now: datetime) -> NormalizedOpportunity:
         eligibility=Eligibility(verified=False),
         location="online" if location.lower() == "online" else location,
         signals=signals,
+        est_hours=EST_HOURS,
         cv_signal=_cv_signal(prize, registrations),
         cv_signal_reason=reason,
         source="devpost",
