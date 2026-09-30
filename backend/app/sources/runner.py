@@ -11,6 +11,10 @@ from sqlalchemy.orm import Session
 
 from app.ai.provider import LLMProvider, get_provider
 from app.config import Settings, get_settings
+from app.gmail.client import GmailClient
+from app.gmail.client import connection as gmail_connection
+from app.gmail.extract import GmailReport, process_gmail
+from app.google import oauth
 from app.opportunities.service import UpsertResult, sync_actions, upsert_opportunities
 from app.sources.base import SourceAdapter
 from app.sources.curated import CuratedSource, load_curated_actions
@@ -24,6 +28,8 @@ logger = logging.getLogger("growthos.sources")
 
 WATCH_ID = "deadline_watch"
 WATCH_NAME = "Hlídač deadlinů (LLM + ověřená citace)"
+GMAIL_ID = "gmail"
+GMAIL_NAME = "Gmail (jen zprávy se štítkem, LLM + ověřená citace)"
 _DEFAULT = object()
 # The startup/weekly job and POST /sources/run may overlap; two concurrent snapshots of the same
 # source would race on inserts (unique dedup_key), so runs are serialized in-process.
@@ -42,6 +48,7 @@ class RunReport(BaseModel):
     ran_at: datetime
     sources: list[SourceReport]
     deadline_watch: WatchReport | None = None
+    gmail: GmailReport | None = None
     actions: int | None = None
     actions_error: str | None = None
 
@@ -114,6 +121,34 @@ def _run_watch(
     return report, watch
 
 
+def _gmail_ready(session: Session, settings: Settings) -> bool:
+    return oauth.configured(settings) and gmail_connection(session).state == "connected"
+
+
+def _run_gmail(
+    session: Session, provider: LLMProvider | None, client: httpx.Client, now: datetime
+) -> tuple[SourceReport, GmailReport | None]:
+    """Labelled mail only (ADR 0009); without a connection or an LLM nothing is read."""
+    settings = get_settings()
+    report = SourceReport(source=GMAIL_ID)
+    if provider is None or not _gmail_ready(session, settings):
+        report.status = "not_configured"
+        return report, None
+    try:
+        gmail = process_gmail(session, provider, GmailClient(session, client), settings, now)
+    except Exception as exc:
+        session.rollback()
+        logger.exception("gmail step failed")
+        report.status = "error"
+        report.error = str(getattr(exc, "detail", exc))[:500]
+        return report, None
+    report.fetched = gmail.checked
+    report.result = UpsertResult(created=gmail.opportunities, updated=gmail.deadlines)
+    if gmail.errors:
+        report.error = "; ".join(gmail.errors)[:500]
+    return report, gmail
+
+
 def run_sources(
     session: Session,
     now: datetime,
@@ -159,7 +194,13 @@ def _run_sources(
         _record(session, watch_report, now)
         reports.append(watch_report)
 
-    run = RunReport(ran_at=now, sources=reports, deadline_watch=watch)
+        gmail: GmailReport | None = None
+        if GMAIL_ID in settings.enabled_sources:
+            gmail_report, gmail = _run_gmail(session, llm, client, now)  # type: ignore[arg-type]
+            _record(session, gmail_report, now)
+            reports.append(gmail_report)
+
+    run = RunReport(ran_at=now, sources=reports, deadline_watch=watch, gmail=gmail)
     try:
         run.actions = sync_actions(session, load_curated_actions())
     except Exception as exc:
@@ -176,7 +217,16 @@ def source_statuses(session: Session) -> list[SourceStatus]:
         (a.id, a.name, a.id in settings.enabled_sources, _is_configured(a))
         for a in all_adapters(settings, None)
     ]
-    entries.append((WATCH_ID, WATCH_NAME, True, bool(settings.llm_base_url.strip())))
+    llm = bool(settings.llm_base_url.strip())
+    entries.append((WATCH_ID, WATCH_NAME, True, llm))
+    entries.append(
+        (
+            GMAIL_ID,
+            GMAIL_NAME,
+            GMAIL_ID in settings.enabled_sources,
+            llm and _gmail_ready(session, settings),
+        )
+    )
     for source_id, name, enabled, configured in entries:
         last = session.scalars(
             select(SourceRun)

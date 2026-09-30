@@ -163,3 +163,42 @@ def github_text(repository: str, client: httpx.Client) -> tuple[str, str, str]:
                 continue
             parts.append(f"{path}:\n{body}")
     return f"{owner}/{repo}", f"https://github.com/{owner}/{repo}", "\n\n".join(parts)[:MAX_TEXT]
+
+
+def propose_extracted(
+    session: Session,
+    profile: Profile,
+    source: str,
+    key: str,
+    reference: str,
+    quote: str,
+    proposed: dict,
+) -> bool:
+    """A proposal found by an extraction step (Gmail, ADR 0009); the user still confirms it.
+
+    ``key`` identifies the origin (e.g. the message id); the verified ``quote`` is the excerpt.
+    Returns True when a new proposal was created.
+    """
+    fingerprint = hashlib.sha256(
+        f"{profile.id}:{source}:{key}:{' '.join(quote.split()).casefold()}".encode()
+    ).hexdigest()
+    if session.scalar(select(ImportProposal).where(ImportProposal.fingerprint == fingerprint)):
+        return False
+    session.add(
+        ImportProposal(
+            profile_id=profile.id,
+            fingerprint=fingerprint,
+            source=source,
+            reference=reference,
+            excerpt=quote,
+            proposed={
+                "kind": "achievement",
+                "url": None,
+                "strength": 0,
+                "signals": detected_skills(proposed["title"] + "\n" + quote),
+                **proposed,
+            },
+        )
+    )
+    session.flush()
+    return True

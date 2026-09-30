@@ -7,6 +7,7 @@ import base64
 import binascii
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from html.parser import HTMLParser
 
 import httpx
 from fastapi import HTTPException
@@ -20,6 +21,7 @@ from app.sources.deadline_watch import llm_excerpt, normalize, page_text
 SCOPE = "https://www.googleapis.com/auth/gmail.readonly"
 API = "https://gmail.googleapis.com/gmail/v1/users/me/"
 MAX_AGE_QUERY = "newer_than:365d"
+MAX_LINKS = 40
 
 
 @dataclass
@@ -55,9 +57,29 @@ def _parts(payload: dict) -> list[dict]:
     return [leaf for child in children for leaf in _parts(child)]
 
 
+class _Links(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.urls: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list) -> None:
+        href = dict(attrs).get("href") or ""
+        if tag == "a" and href.startswith(("https://", "http://")) and href not in self.urls:
+            self.urls.append(href)
+
+
+def html_text(html: str) -> str:
+    """Visible text plus the link targets, which HTML mail often keeps only in ``href``."""
+    parser = _Links()
+    parser.feed(html)
+    text = page_text(html)
+    links = parser.urls[:MAX_LINKS]
+    return text + ("\nOdkazy:\n" + "\n".join(links) if text and links else "")
+
+
 def body_text(payload: dict) -> str:
     leaves = _parts(payload)
-    for mime, convert in (("text/plain", normalize_lines), ("text/html", page_text)):
+    for mime, convert in (("text/plain", normalize_lines), ("text/html", html_text)):
         chunks = [
             _decode(p.get("body", {}).get("data", ""))
             for p in leaves
