@@ -121,6 +121,33 @@ def upsert_opportunities(
     return result
 
 
+def add_extracted_opportunity(
+    session: Session, source: str, item: NormalizedOpportunity, quote: str | None
+) -> bool:
+    """Insert one item found by an extraction step (Gmail, ADR 0009); no snapshot closing.
+
+    ``item.deadline_at`` must already be verified against ``quote``. Existing refs and
+    cross-source duplicates are left alone. Returns True when a row was created.
+    """
+    duplicate = session.scalars(
+        select(Opportunity).where(
+            (Opportunity.dedup_key == item.dedup_key)
+            | ((Opportunity.source == source) & (Opportunity.source_ref == item.source_ref))
+        )
+    ).first()
+    if duplicate is not None:
+        return False
+    values = _values(item)
+    if item.deadline_at is not None:
+        values["deadline_source"] = EXTRACTED
+        values["deadline_quote"] = quote
+    session.add(
+        Opportunity(source=source, source_ref=item.source_ref, fetched_at=item.fetched_at, **values)
+    )
+    session.flush()
+    return True
+
+
 def sync_actions(session: Session, actions: list[CuratedAction]) -> int:
     """Upsert curated actions by id; actions removed from the file become inactive."""
     existing = {a.source_ref: a for a in session.scalars(select(GrowthAction))}
