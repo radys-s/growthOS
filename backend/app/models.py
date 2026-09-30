@@ -18,4 +18,5 @@ __all__ = [
 ]
 
 from app.calendar.models import CalendarConnection  # noqa: F401
+from app.gmail.models import GmailConnection, GmailMessage  # noqa: F401
 from app.growth.models import ImportProposal, PlannedAction, ProgressSnapshot  # noqa: F401
