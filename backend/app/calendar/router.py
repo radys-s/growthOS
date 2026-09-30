@@ -33,6 +33,7 @@ class ConnectOut(BaseModel):
 class SyncOut(BaseModel):
     changed: int
     conflicts: int
+    skipped: list[str] = []  # plans left untouched this run, with the reason
 
 
 class ResolveIn(BaseModel):
@@ -69,7 +70,9 @@ def callback(session: DbSession, state: str = "", code: str = "", error: str | N
                 finish(session, state, code, client)
         except httpx.HTTPError as exc:
             raise HTTPException(503, "Google neodpovídá. Připoj účet znovu.") from exc
-        return RedirectResponse("http://localhost:3000/growth?tab=calendar", status_code=303)
+        return RedirectResponse(
+            get_settings().frontend_url.rstrip("/") + "/growth?tab=calendar", status_code=303
+        )
 
 
 @router.post("/create", response_model=CalendarStatus)

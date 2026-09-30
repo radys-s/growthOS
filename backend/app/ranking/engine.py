@@ -20,7 +20,6 @@ PENALTIES = ("effort", "cost")
 DEFAULT_WEEKLY_HOURS = 5  # used when the profile has no weekly budget
 HIDING_DECISIONS = {"done", "skipped", "not_interested"}
 MAX_PER_KIND = 2
-LOW_CREDENTIAL_VALUE = "Nízká hodnota certifikátu pro tvůj cíl"
 MIN_REASON_CONTRIBUTION = 0.02
 # A factor must also be genuinely high to be quoted as a reason (e.g. the unknown-CV default 0.4
 # or the no-deadline urgency 0.2 must never read as "strong CV signal" / "deadline is near").

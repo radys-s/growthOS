@@ -9,7 +9,8 @@ from sqlalchemy import select
 from app.common import utcnow
 from app.db import DbSession
 from app.decisions.models import Decision
-from app.decisions.schemas import DecisionOut
+from app.decisions.schemas import DecisionIn, DecisionOut, DecisionStatus
+from app.decisions.service import latest_decisions, record_decision
 from app.growth.imports import MAX_BYTES, document_text, github_text, propose
 from app.growth.locking import WRITE_LOCK
 from app.growth.models import ImportProposal, PlannedAction, ProgressSnapshot
@@ -40,8 +41,9 @@ def text_preview(data: TextImport, session: DbSession):
 
 
 @router.post("/imports/file", response_model=list[ProposalOut])
-async def file_preview(file: UploadFile, session: DbSession):
-    content = await file.read(MAX_BYTES + 1)
+def file_preview(file: UploadFile, session: DbSession):
+    # Sync handler: parsing and the write lock run in the threadpool, not on the event loop.
+    content = file.file.read(MAX_BYTES + 1)
     text = document_text(file.filename or "", content)
     with WRITE_LOCK:
         return propose(
@@ -73,7 +75,7 @@ def confirm(proposal_id: uuid.UUID, data: Confirmation, session: DbSession):
             if not item:
                 raise HTTPException(409, "Tento import již byl potvrzen a později odstraněn.")
             return item
-        if data.evidence_kind == "demonstrated" and not data.item.result:
+        if data.evidence_kind == "demonstrated" and not (data.item.result or "").strip():
             raise HTTPException(422, "Doložený výsledek vyžaduje konkrétní popis výsledku.")
         item = confirm_item(
             session,
@@ -114,24 +116,6 @@ def completion(data: Completion, session: DbSession):
                 "confirmed_at": utcnow().isoformat(),
             },
         )
-        done = session.scalar(
-            select(Decision).where(
-                Decision.profile_id == profile.id,
-                Decision.target_type == data.target_type,
-                Decision.target_id == data.target_id,
-                Decision.status == "done",
-            )
-        )
-        if not done:
-            session.add(
-                Decision(
-                    profile_id=profile.id,
-                    target_type=data.target_type,
-                    target_id=data.target_id,
-                    status="done",
-                    note=data.item.result,
-                )
-            )
         for plan in session.scalars(
             select(PlannedAction).where(
                 PlannedAction.profile_id == profile.id,
@@ -140,6 +124,18 @@ def completion(data: Completion, session: DbSession):
             )
         ):
             plan.status = "done"
+        # Latest effective decision, so a reversed "done" is recorded again.
+        if latest_decisions(session, profile).get(f"{data.target_type}:{data.target_id}") != "done":
+            record_decision(  # commits everything above in one transaction
+                session,
+                profile,
+                DecisionIn(
+                    target_type=data.target_type,
+                    target_id=data.target_id,
+                    status=DecisionStatus.DONE,
+                    note=(data.item.result or "")[:2000],
+                ),
+            )
         session.commit()
         return item
 
@@ -186,7 +182,7 @@ def plans(session: DbSession, week_of: date | None = None):
         session.scalars(
             select(PlannedAction)
             .where(PlannedAction.profile_id == profile.id, PlannedAction.week_of == start)
-            .order_by(PlannedAction.starts_at, PlannedAction.title)
+            .order_by(PlannedAction.starts_at.asc().nulls_last(), PlannedAction.title)
         )
     )
     hours = sum(p.est_hours for p in rows if p.status != "cancelled")

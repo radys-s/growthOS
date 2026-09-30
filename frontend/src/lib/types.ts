@@ -277,4 +277,4 @@ export type CalendarStatus = {
   has_calendar: boolean;
 };
 export type CalendarConnect = { authorization_url: string };
-export type CalendarSync = { changed: number; conflicts: number };
+export type CalendarSync = { changed: number; conflicts: number; skipped: string[] };
