@@ -1,4 +1,5 @@
 import copy
+import sys
 import time
 from datetime import UTC, datetime
 
@@ -11,6 +12,10 @@ from app.calendar.sync import apply_remote, local_value, remote_value, synchroni
 from app.calendar.vault import protect, reveal
 from app.growth.models import PlannedAction
 from app.profile.service import get_or_create_profile
+
+windows_only = pytest.mark.skipif(
+    sys.platform != "win32", reason="Google tokens are stored with Windows DPAPI"
+)
 
 
 class FakeGoogle:
@@ -133,6 +138,7 @@ def test_event_ownership_and_cancel(session, planned):
     assert not api.events
 
 
+@windows_only
 def test_dpapi_roundtrip_and_no_plaintext():
     secret = {"access_token": "not-a-real-token", "refresh_token": "test-refresh"}
     protected = protect(secret)
@@ -140,6 +146,7 @@ def test_dpapi_roundtrip_and_no_plaintext():
     assert reveal(protected) == secret
 
 
+@windows_only
 def test_status_excludes_tokens_and_disconnect(client, session):
     row = connection(session)
     row.protected_tokens = protect({"access_token": "test-secret"})
@@ -151,6 +158,7 @@ def test_status_excludes_tokens_and_disconnect(client, session):
     assert row.protected_tokens is None
 
 
+@windows_only
 def test_refresh_failure_and_missing_calendar(session):
     row = connection(session)
     row.calendar_id = "dedicated"
@@ -192,6 +200,7 @@ def test_refresh_failure_and_missing_calendar(session):
     assert row.state == "calendar_missing"
 
 
+@windows_only
 def test_calendar_creation_is_not_repeated(session):
     row = connection(session)
     row.protected_tokens = protect({"access_token": "test", "expires_at": time.time() + 1000})
@@ -221,6 +230,7 @@ def test_prague_dst_absolute_duration(planned):
     assert local_value(planned)["starts_at"].endswith("+00:00")
 
 
+@windows_only
 def test_oauth_pkce_state_and_reconnect(session, monkeypatch):
     from urllib.parse import parse_qs, urlparse
 
@@ -254,6 +264,7 @@ def test_oauth_pkce_state_and_reconnect(session, monkeypatch):
     assert reveal(row.protected_tokens)["refresh_token"] == "refresh"
 
 
+@windows_only
 def test_pending_calendar_survives_reauthorization(session, monkeypatch):
     from urllib.parse import parse_qs, urlparse
 
@@ -312,6 +323,7 @@ def test_spring_dst(planned):
     assert (planned.ends_at - planned.starts_at).total_seconds() == 3600
 
 
+@windows_only
 def test_refused_calendar_creation_can_be_retried(session):
     row = connection(session)
     row.protected_tokens = protect({"access_token": "test", "expires_at": time.time() + 1000})
@@ -326,6 +338,7 @@ def test_refused_calendar_creation_can_be_retried(session):
     assert row.calendar_id == "dedicated" and row.state == "connected"
 
 
+@windows_only
 def test_permission_403_asks_to_reconnect_but_rate_limit_does_not(session):
     row = connection(session)
     row.calendar_id = "dedicated"
