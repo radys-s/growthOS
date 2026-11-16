@@ -154,7 +154,10 @@ def test_llm_excerpt_keeps_date_lines_of_long_pages() -> None:
 # --- watcher ---------------------------------------------------------------------------
 
 
-def test_verified_deadline_is_stored_and_exposed(session: Session, client: TestClient) -> None:
+def test_verified_deadline_is_stored_and_exposed(
+    session: Session, client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("app.opportunities.router.utcnow", lambda: NOW)
     _seed(session)
     llm = FakeLLM(_answer())
     report = watch_deadlines(session, llm, _pages(PAGE), NOW)

@@ -1,4 +1,5 @@
 import base64
+import sys
 import time
 from urllib.parse import parse_qs, urlparse
 
@@ -10,6 +11,10 @@ from app.calendar.vault import protect, reveal
 from app.config import Settings
 from app.gmail.client import SCOPE, GmailClient, body_text, connection
 from app.google import oauth
+
+windows_only = pytest.mark.skipif(
+    sys.platform != "win32", reason="Google tokens are stored with Windows DPAPI"
+)
 
 LABEL = {"id": "L1", "name": "growthOS"}
 
@@ -52,6 +57,7 @@ def test_body_falls_back_to_html():
     assert body_text(payload) == "Výzva\nPřihlas se"
 
 
+@windows_only
 def test_client_reads_only_the_label(session):
     connected(session)
     seen = []
@@ -94,6 +100,7 @@ def test_client_reads_only_the_label(session):
     assert message.sent_at is not None and message.permalink.endswith("#all/m1")
 
 
+@windows_only
 def test_revoked_access_asks_to_reconnect(session):
     row = connected(session)
 
@@ -106,6 +113,7 @@ def test_revoked_access_asks_to_reconnect(session):
     assert err.value.status_code == 409 and row.state == "reauthorize"
 
 
+@windows_only
 def test_rate_limit_is_transient(session):
     row = connected(session)
 
@@ -118,6 +126,7 @@ def test_rate_limit_is_transient(session):
     assert err.value.status_code == 503 and row.state == "connected"
 
 
+@windows_only
 def test_separate_readonly_grant(session):
     settings = Settings(google_client_id="c", google_client_secret="s")
     row = connection(session)
@@ -140,6 +149,7 @@ def test_separate_readonly_grant(session):
     assert reveal(row.protected_tokens)["refresh_token"] == "r"
 
 
+@windows_only
 def test_grant_without_gmail_scope_is_rejected(session):
     settings = Settings(google_client_id="c", google_client_secret="s")
     row = connection(session)
@@ -158,6 +168,7 @@ def test_grant_without_gmail_scope_is_rejected(session):
     assert row.protected_tokens is None
 
 
+@windows_only
 def test_status_and_disconnect(client, session):
     connected(session)
     body = client.get("/gmail/status").json()
