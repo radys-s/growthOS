@@ -262,3 +262,32 @@ def test_planning_keeps_a_done_decision(client):
     assert client.post("/plans", json=plan).status_code == 200
     history = [e for e in client.get("/history").json() if e["target_id"] == target["target_id"]]
     assert [e["status"] for e in history] == ["done"]
+
+
+@pytest.mark.parametrize("status", ["done", "cancelled"])
+def test_logging_a_finished_or_cancelled_plan_does_not_mark_planned(client, status):
+    seed()
+    client.post("/sources/run")
+    candidate = client.get("/recommendations").json()["top"][0]["candidate"]
+    plan = {
+        "title": "Already finished",
+        "est_hours": 1,
+        "week_of": str(date.today()),
+        "status": status,
+        "target_id": candidate["target_id"],
+        "target_type": candidate["source"],
+    }
+    assert client.post("/plans", json=plan).status_code == 200
+    assert not [e for e in client.get("/history").json() if e["target_id"] == plan["target_id"]]
+
+
+def test_planning_keeps_already_knew_for_the_novelty_metric(client):
+    seed()
+    client.post("/sources/run")
+    candidate = client.get("/recommendations").json()["top"][0]["candidate"]
+    target = {"target_type": candidate["source"], "target_id": candidate["target_id"]}
+    client.post("/decisions", json={**target, "status": "already_knew"})
+    before = client.get("/recommendations").json()["novelty"]
+    plan = {"title": "Known item", "est_hours": 1, "week_of": str(date.today()), **target}
+    assert client.post("/plans", json=plan).status_code == 200
+    assert client.get("/recommendations").json()["novelty"] == before

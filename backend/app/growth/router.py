@@ -208,6 +208,14 @@ def plans(session: DbSession, week_of: date | None = None):
     )
 
 
+# Decisions a new plan leaves as they are.
+KEEP_ON_PLAN = {
+    DecisionStatus.PLANNED.value,
+    DecisionStatus.DONE.value,
+    DecisionStatus.ALREADY_KNEW.value,
+}
+
+
 @router.post("/plans", response_model=PlanOut)
 def create_plan(data: PlanIn, session: DbSession):
     with WRITE_LOCK:
@@ -219,12 +227,14 @@ def create_plan(data: PlanIn, session: DbSession):
             raise HTTPException(404, "Akce nenalezena.")
         row = PlannedAction(profile_id=profile.id, **data.model_dump())
         session.add(row)
-        # Mark the item as planned on the dashboard; never overwrite a finished one.
+        # Mark the item as planned on the dashboard, but only for upcoming work, and never over
+        # a finished item or "already knew" (it feeds the novelty metric).
         key = f"{data.target_type}:{data.target_id}"
-        if data.target_id and latest_decisions(session, profile).get(key) not in {
-            DecisionStatus.PLANNED.value,
-            DecisionStatus.DONE.value,
-        }:
+        if (
+            data.target_id
+            and data.status in {"planned", "in_progress"}
+            and latest_decisions(session, profile).get(key) not in KEEP_ON_PLAN
+        ):
             record_decision(  # commits the plan in the same transaction
                 session,
                 profile,
