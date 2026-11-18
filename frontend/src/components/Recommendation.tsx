@@ -102,6 +102,9 @@ export function CandidateMeta({
       {candidate.decision === "planned" && (
         <Badge tone="sky">Naplánováno</Badge>
       )}
+      {candidate.decision === "useful" && (
+        <Badge tone="emerald">Užitečné</Badge>
+      )}
       {candidate.decision === "already_knew" && (
         <Badge tone="violet">Už znám</Badge>
       )}
@@ -164,12 +167,19 @@ function FactorBars({ item }: { item: RankedItem }) {
   );
 }
 
-function DecisionButtons({ candidate }: { candidate: Candidate }) {
+function DecisionButtons({
+  candidate,
+  kind,
+}: {
+  candidate: Candidate;
+  kind: string | null;
+}) {
   if (!candidate.target_id) return null;
   return (
     <form action={decide} className="mt-3 flex flex-wrap gap-1.5">
       <input type="hidden" name="target_type" value={candidate.source} />
       <input type="hidden" name="target_id" value={candidate.target_id} />
+      {kind && <input type="hidden" name="kind" value={kind} />}
       <a
         className="rounded-md border border-emerald-400/30 px-2.5 py-1 text-xs text-emerald-200"
         href={`/growth?tab=plan&target=${candidate.target_id}&type=${candidate.source}&title=${encodeURIComponent(candidate.title)}`}
@@ -205,9 +215,12 @@ function DecisionButtons({ candidate }: { candidate: Candidate }) {
 export function RecommendationCard({
   item,
   rank,
+  kind = null,
 }: {
   item: RankedItem;
   rank: number;
+  /** Active opportunity filter, kept after a decision. */
+  kind?: string | null;
 }) {
   const { candidate } = item;
   return (
@@ -253,7 +266,7 @@ export function RecommendationCard({
             </ul>
           )}
           <FactorBars item={item} />
-          <DecisionButtons candidate={candidate} />
+          <DecisionButtons candidate={candidate} kind={kind} />
         </div>
       </div>
     </article>

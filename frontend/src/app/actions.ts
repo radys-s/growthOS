@@ -1,6 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { redirect, RedirectType } from "next/navigation";
 
 import { api, ApiError } from "@/lib/api";
 import type { DecisionStatus, ProfileItemKind } from "@/lib/types";
@@ -52,6 +53,16 @@ function failure(error: unknown): ActionState {
 
 // --- dashboard -------------------------------------------------------------------------
 
+/** Dashboard URL that keeps the opportunity filter and optionally names the last decision. */
+function dashboard(form: FormData, decided?: string): string {
+  const params = new URLSearchParams();
+  const kind = text(form, "kind");
+  if (kind && /^[a-z_]+$/.test(kind)) params.set("kind", kind);
+  if (decided) params.set("decided", decided);
+  const query = params.toString();
+  return query ? `/?${query}` : "/";
+}
+
 export async function decide(form: FormData): Promise<void> {
   const status = text(form, "status") as DecisionStatus | null;
   const type = targetType(form);
@@ -61,7 +72,8 @@ export async function decide(form: FormData): Promise<void> {
     method: "POST",
     body: JSON.stringify({ target_type: type, target_id: targetId, status }),
   });
-  refresh();
+  // The dashboard confirms the decision and offers a one-click undo.
+  redirect(dashboard(form, `${type}:${targetId}`), RedirectType.replace);
 }
 
 export async function undoDecision(form: FormData): Promise<void> {
@@ -69,7 +81,7 @@ export async function undoDecision(form: FormData): Promise<void> {
   const targetId = uuid(form, "target_id");
   if (!type || !targetId) return;
   await api(`/decisions/${type}/${targetId}`, { method: "DELETE" });
-  refresh();
+  redirect(dashboard(form), RedirectType.replace);
 }
 
 export async function activateGoal(form: FormData): Promise<void> {
