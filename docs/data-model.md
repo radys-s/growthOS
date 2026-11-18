@@ -149,6 +149,9 @@ One row per source (and the deadline watcher) per run: `source`, `ran_at`, `stat
   `GET /progress` and `GET /history` expose the snapshots and the append-only decision log.
 - `PlannedAction` stores target, work estimate, week, status, UTC schedule, calendar event ID,
   common sync value and optional conflict. `GET/POST /plans` and `PUT /plans/{id}` serve the week.
+  Creating a planned or in-progress plan for a target records a `planned` decision, so the
+  dashboard shows it as planned. It leaves `planned`, `done` and `already_knew` as they are; a
+  skipped or uninteresting item that gets planned returns to the ranking with the badge.
 - `CalendarConnection` stores the dedicated calendar ID, connection state, and DPAPI-protected
   OAuth tokens. `/calendar/status`, `/connect`, `/callback`, `/create`, `/sync`, `/conflicts`,
   `/recover` and `/replace-missing` operate only on this calendar.
