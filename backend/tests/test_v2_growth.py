@@ -230,3 +230,35 @@ def test_useful_feedback_survives_later_decision(client):
     assert client.get("/recommendations").json()["novelty"]["explicitly_useful"] == 1
     client.delete(f"/decisions/{target['target_type']}/{target['target_id']}")
     assert client.get("/recommendations").json()["novelty"]["explicitly_useful"] == 0
+
+
+def test_planning_an_item_marks_it_planned_once(client):
+    seed()
+    client.post("/sources/run")
+    candidate = client.get("/recommendations").json()["top"][0]["candidate"]
+    payload = {
+        "title": candidate["title"],
+        "est_hours": 2,
+        "week_of": str(date.today()),
+        "target_id": candidate["target_id"],
+        "target_type": candidate["source"],
+    }
+    assert client.post("/plans", json=payload).status_code == 200
+    assert client.post("/plans", json=payload).status_code == 200  # a second work block
+    top = client.get("/recommendations").json()["top"]
+    planned = next(i for i in top if i["candidate"]["key"] == candidate["key"])
+    assert planned["candidate"]["decision"] == "planned"
+    history = [e for e in client.get("/history").json() if e["target_id"] == candidate["target_id"]]
+    assert [e["status"] for e in history] == ["planned"]
+
+
+def test_planning_keeps_a_done_decision(client):
+    seed()
+    client.post("/sources/run")
+    candidate = client.get("/recommendations").json()["top"][0]["candidate"]
+    target = {"target_type": candidate["source"], "target_id": candidate["target_id"]}
+    client.post("/decisions", json={**target, "status": "done"})
+    plan = {"title": "Follow-up", "est_hours": 1, "week_of": str(date.today()), **target}
+    assert client.post("/plans", json=plan).status_code == 200
+    history = [e for e in client.get("/history").json() if e["target_id"] == target["target_id"]]
+    assert [e["status"] for e in history] == ["done"]

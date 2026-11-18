@@ -219,6 +219,22 @@ def create_plan(data: PlanIn, session: DbSession):
             raise HTTPException(404, "Akce nenalezena.")
         row = PlannedAction(profile_id=profile.id, **data.model_dump())
         session.add(row)
+        # Mark the item as planned on the dashboard; never overwrite a finished one.
+        key = f"{data.target_type}:{data.target_id}"
+        if data.target_id and latest_decisions(session, profile).get(key) not in {
+            DecisionStatus.PLANNED.value,
+            DecisionStatus.DONE.value,
+        }:
+            record_decision(  # commits the plan in the same transaction
+                session,
+                profile,
+                DecisionIn(
+                    target_type=data.target_type,
+                    target_id=data.target_id,
+                    status=DecisionStatus.PLANNED,
+                    note=data.title[:2000],
+                ),
+            )
         session.commit()
         return row
 
