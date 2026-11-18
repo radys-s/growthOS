@@ -7,8 +7,9 @@ import { SubmitButton } from "@/components/SubmitButton";
 import { EDUCATION_LABELS, ITEM_KIND_LABELS, LEVEL_LABELS } from "@/lib/labels";
 import type { Profile, Signal } from "@/lib/types";
 
-const input =
-  "w-full rounded-md border border-white/10 bg-zinc-950/60 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-emerald-400/50";
+const control =
+  "rounded-md border border-white/10 bg-zinc-950/60 px-3 py-1.5 text-sm text-zinc-100 outline-none focus:border-emerald-400/50";
+const input = `w-full ${control}`;
 const label = "flex flex-col gap-1 text-xs text-zinc-400";
 const primary =
   "rounded-md bg-emerald-500/90 px-4 py-1.5 text-sm font-medium text-zinc-950 hover:bg-emerald-400";
@@ -112,11 +113,11 @@ export function SkillsForm({ profile, signals }: { profile: Profile; signals: Si
             key={signal.id}
             className="flex items-center justify-between gap-3 text-sm text-zinc-200"
           >
-            <span className="truncate">{signal.label}</span>
+            <span className="min-w-0">{signal.label}</span>
             <select
               name={`skill:${signal.id}`}
               defaultValue={levels.get(signal.id) ?? 0}
-              className={`${input} w-32 shrink-0`}
+              className={`${control} w-36 shrink-0`}
             >
               {LEVEL_LABELS.map((text, level) => (
                 <option key={level} value={level}>

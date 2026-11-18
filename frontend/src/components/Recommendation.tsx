@@ -138,12 +138,13 @@ function FactorBars({ item }: { item: RankedItem }) {
           const value = item.contributions[factor];
           const width = `${(Math.abs(value) / max) * 100}%`;
           return (
+            // Narrow screens: label and value on one line, the bar full width below.
             <div
               key={factor}
-              className="grid grid-cols-[9rem_1fr_3.5rem] items-center gap-2"
+              className="grid grid-cols-[1fr_auto] items-center gap-x-2 gap-y-1 sm:grid-cols-[9rem_1fr_3.5rem]"
             >
               <dt className="text-zinc-400">{FACTOR_LABELS[factor]}</dt>
-              <dd className="h-1.5 overflow-hidden rounded-full bg-white/5">
+              <dd className="col-span-2 row-start-2 h-1.5 overflow-hidden rounded-full bg-white/5 sm:col-span-1 sm:row-start-auto">
                 <div
                   className={`h-full rounded-full ${value < 0 ? "bg-rose-400/70" : "bg-emerald-400/70"}`}
                   style={{ width }}
