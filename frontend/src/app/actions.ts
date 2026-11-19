@@ -53,34 +53,53 @@ function failure(error: unknown): ActionState {
 
 // --- dashboard -------------------------------------------------------------------------
 
+/** A decision status from the form, or null when missing or not a real decision. */
+function decision(form: FormData, name: string): DecisionStatus | null {
+  const value = text(form, name) as DecisionStatus | null;
+  return value && DECISIONS.includes(value) ? value : null;
+}
+
 /** Dashboard URL that keeps the opportunity filter and optionally names the last decision. */
-function dashboard(form: FormData, decided?: string): string {
+function dashboard(form: FormData, decided?: Record<string, string | null>): string {
   const params = new URLSearchParams();
   const kind = text(form, "kind");
   if (kind && /^[a-z_]+$/.test(kind)) params.set("kind", kind);
-  if (decided) params.set("decided", decided);
+  for (const [key, value] of Object.entries(decided ?? {})) if (value) params.set(key, value);
   const query = params.toString();
   return query ? `/?${query}` : "/";
 }
 
 export async function decide(form: FormData): Promise<void> {
-  const status = text(form, "status") as DecisionStatus | null;
+  const status = decision(form, "status");
   const type = targetType(form);
   const targetId = uuid(form, "target_id");
-  if (!status || !DECISIONS.includes(status) || !type || !targetId) return;
+  if (!status || !type || !targetId) return;
   await api("/decisions", {
     method: "POST",
     body: JSON.stringify({ target_type: type, target_id: targetId, status }),
   });
-  // The dashboard confirms the decision and offers a one-click undo.
-  redirect(dashboard(form, `${type}:${targetId}`), RedirectType.replace);
+  // The dashboard confirms the decision and offers a one-click undo back to `previous`.
+  const previous = decision(form, "previous");
+  redirect(
+    dashboard(form, { decided: `${type}:${targetId}`, previous }),
+    RedirectType.replace,
+  );
 }
 
+/** Restores the previous decision when the form names one; otherwise clears the decision. */
 export async function undoDecision(form: FormData): Promise<void> {
   const type = targetType(form);
   const targetId = uuid(form, "target_id");
   if (!type || !targetId) return;
-  await api(`/decisions/${type}/${targetId}`, { method: "DELETE" });
+  const previous = decision(form, "previous");
+  if (previous) {
+    await api("/decisions", {
+      method: "POST",
+      body: JSON.stringify({ target_type: type, target_id: targetId, status: previous }),
+    });
+  } else {
+    await api(`/decisions/${type}/${targetId}`, { method: "DELETE" });
+  }
   redirect(dashboard(form), RedirectType.replace);
 }
 

@@ -180,6 +180,7 @@ function DecisionButtons({
       <input type="hidden" name="target_type" value={candidate.source} />
       <input type="hidden" name="target_id" value={candidate.target_id} />
       {kind && <input type="hidden" name="kind" value={kind} />}
+      {candidate.decision && <input type="hidden" name="previous" value={candidate.decision} />}
       <a
         className="rounded-md border border-emerald-400/30 px-2.5 py-1 text-xs text-emerald-200"
         href={`/growth?tab=plan&target=${candidate.target_id}&type=${candidate.source}&title=${encodeURIComponent(candidate.title)}`}
