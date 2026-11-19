@@ -70,7 +70,9 @@ Each ranked item returns:
 - `reasons` — up to 3 sentences from the largest positive contributions (≥ 0.02), quoted only if
   the factor itself is high (relevance ≥ 0.3, gap ≥ 0.2, CV ≥ 0.5, skill ≥ 0.3,
   probability ≥ 0.6, urgency ≥ 0.5)
-  (e.g. "Pokrývá tvoje mezery: deployment, research evidence"),
+  (e.g. "Pokrývá tvoje mezery: deployment, research evidence"). When the gap reason is shown, the
+  goal-relevance and learning reasons name only signals it did not, and are dropped if none
+  remain, so the next factor takes the slot,
 - `warnings` — e.g. unverified eligibility, deadline not published, paid.
 
 ## 6. Credential tiers (post-M1)

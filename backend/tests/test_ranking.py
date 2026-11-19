@@ -173,10 +173,10 @@ def test_priority_is_sum_of_contributions() -> None:
     item = score(_cand(cv_signal=5, est_hours=10, cost_eur=0), PROFILE, GOAL, NOW, TAX)
     assert item.priority == pytest.approx(sum(item.contributions.values()), abs=1e-3)
     assert item.contributions["effort"] < 0
-    # cv 0.2 ties relevance 0.2 (broken by name), then gap 0.3 × 0.5 = 0.15.
+    # cv 0.2 ties relevance 0.2 (broken by name), then gap 0.3 × 0.5 = 0.15. The goal and
+    # learning reasons would only repeat the gap's signal, and no other factor is high enough.
     assert item.reasons == [
         "Silný signál do CV",
-        "Sedí k cíli: Nasazení modelů / aplikací",
         "Pokrývá tvoje mezery: Nasazení modelů / aplikací",
     ]
 
@@ -198,6 +198,17 @@ def test_reasons_and_warnings() -> None:
     assert "Podmínky účasti nejsou ověřené — zkontroluj pravidla" in item.warnings
     assert "Termín je jen odhad podle minulého ročníku" in item.warnings
     assert "Cena neuvedena" in item.warnings
+
+
+def test_reasons_do_not_repeat_gap_signals() -> None:
+    covered = PROFILE.model_copy(update={"coverage": {**PROFILE.coverage, "teamwork": 1.0}})
+    item = score(_cand(signals=["deployment", "teamwork"]), covered, GOAL, NOW, TAX)
+    assert "Pokrývá tvoje mezery: Nasazení modelů / aplikací" in item.reasons
+    # The goal reason names only what the gap reason did not: the already covered teamwork.
+    assert "Sedí k cíli: Týmová práce" in item.reasons
+
+    only_gaps = score(_cand(signals=["deployment"]), PROFILE, GOAL, NOW, TAX)
+    assert not any(r.startswith(("Sedí k cíli", "Naučíš se")) for r in only_gaps.reasons)
 
 
 def test_rank_is_deterministic_and_orders() -> None:

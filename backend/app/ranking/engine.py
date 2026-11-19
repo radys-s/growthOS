@@ -271,20 +271,31 @@ def contributions(factors: dict[str, float], weights: FactorWeights) -> dict[str
 # --- explanations ------------------------------------------------------------------------
 
 
+def _gap_signals(candidate: Candidate, profile: ProfileFacts, goal: GoalFacts) -> list[str]:
+    """Up to 3 goal signals the candidate covers that are still gaps, biggest gap first."""
+    cov = profile.coverage
+    return sorted(
+        (s for s in candidate.signals if s in goal.required and cov.get(s, 0.0) < 1),
+        key=lambda s: (-goal.required[s] * (1 - cov.get(s, 0.0)), s),
+    )[:3]
+
+
 def _reason(
-    name: str, candidate: Candidate, profile: ProfileFacts, goal: GoalFacts, taxonomy: Taxonomy
-) -> str:
+    name: str,
+    candidate: Candidate,
+    profile: ProfileFacts,
+    goal: GoalFacts,
+    taxonomy: Taxonomy,
+    named: frozenset[str] = frozenset(),
+) -> str | None:
+    """One sentence for a factor; None when it would only repeat signals in `named`."""
     cov = profile.coverage
     signals = candidate.signals
     if name == "relevance":
-        on_goal = [s for s in signals if s in goal.required]
-        return f"Sedí k cíli: {_labels(on_goal, taxonomy)}"
+        on_goal = [s for s in signals if s in goal.required and s not in named]
+        return f"Sedí k cíli: {_labels(on_goal, taxonomy)}" if on_goal else None
     if name == "gap_coverage":
-        gapped = sorted(
-            (s for s in signals if s in goal.required and cov.get(s, 0.0) < 1),
-            key=lambda s: (-goal.required[s] * (1 - cov.get(s, 0.0)), s),
-        )
-        return f"Pokrývá tvoje mezery: {_labels(gapped[:3], taxonomy)}"
+        return f"Pokrývá tvoje mezery: {_labels(_gap_signals(candidate, profile, goal), taxonomy)}"
     if name == "cv_signal":
         if candidate.cv_signal_reason:
             return f"Silný signál do CV — {candidate.cv_signal_reason}"
@@ -292,7 +303,10 @@ def _reason(
     if name == "skill_gain":
         new = [s for s in signals if cov.get(s, 0.0) < 0.5 and s in taxonomy.by_id]
         new = [s for s in new if taxonomy.by_id[s].category == SignalCategory.SKILL]
-        return f"Naučíš se: {_labels(new[:3], taxonomy)}" if new else "Posune tvoje dovednosti"
+        if not new:
+            return "Posune tvoje dovednosti"
+        unnamed = [s for s in new if s not in named]
+        return f"Naučíš se: {_labels(unnamed[:3], taxonomy)}" if unnamed else None
     if name == "probability":
         return "Máš dobrou šanci uspět"
     if name == "urgency" and candidate.deadline is not None:
@@ -347,12 +361,24 @@ def score(
         ),
         key=lambda nv: (-nv[1], nv[0]),
     )
+    names = [name for name, _ in positive]
+    # When the gap reason is shown, the goal and learning reasons name only the other signals.
+    named = (
+        frozenset(_gap_signals(candidate, profile, goal))
+        if "gap_coverage" in names[:3]
+        else frozenset()
+    )
+    reasons = [
+        reason
+        for name in names
+        if (reason := _reason(name, candidate, profile, goal, taxonomy, named)) is not None
+    ]
     return RankedItem(
         candidate=candidate,
         priority=round(sum(contrib.values()), 6),
         factors={k: round(v, 4) for k, v in factors.items()},
         contributions={k: round(v, 4) for k, v in contrib.items()},
-        reasons=[_reason(name, candidate, profile, goal, taxonomy) for name, _ in positive[:3]],
+        reasons=reasons[:3],
         warnings=_warnings(candidate, profile),
         credential_tier=tier,
     )
