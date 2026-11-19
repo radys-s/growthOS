@@ -11,11 +11,26 @@ import { EmptyState, Section, SectionSkeleton } from "@/components/Section";
 import { SourceList } from "@/components/Sources";
 import { SubmitButton } from "@/components/SubmitButton";
 import { getGaps, getGoals, getRecommendations, getSources } from "@/lib/api";
+import type { Candidate } from "@/lib/types";
+
+/** Confirmation shown after a decision, phrased as what just happened. */
+const DECIDED_TEXT: Record<string, string> = {
+  useful: "Označeno jako užitečné",
+  skipped: "Přeskočeno",
+  not_interested: "Skryto, nezajímá tě",
+  already_knew: "Označeno jako už známé",
+  planned: "Naplánováno",
+  done: "Hotovo",
+};
 
 export default function Dashboard({ searchParams }: PageProps<"/">) {
   const kind = searchParams.then((params) =>
     typeof params.kind === "string" ? params.kind : null,
   );
+  const decided = searchParams.then((params) => ({
+    key: typeof params.decided === "string" ? params.decided : null,
+    previous: typeof params.previous === "string" ? params.previous : null,
+  }));
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10 sm:px-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -41,7 +56,7 @@ export default function Dashboard({ searchParams }: PageProps<"/">) {
       </header>
 
       <Suspense fallback={<DashboardSkeleton />}>
-        <DashboardContent kind={kind} />
+        <DashboardContent kind={kind} decided={decided} />
       </Suspense>
     </main>
   );
@@ -60,7 +75,36 @@ function DashboardSkeleton() {
   );
 }
 
-async function DashboardContent({ kind }: { kind: Promise<string | null> }) {
+function UndoForm({
+  candidate,
+  kind,
+  previous = null,
+  className,
+}: {
+  candidate: Candidate;
+  kind: string | null;
+  /** Decision to restore; without it the decision is cleared. */
+  previous?: string | null;
+  className: string;
+}) {
+  return (
+    <form action={undoDecision} className="shrink-0">
+      <input type="hidden" name="target_type" value={candidate.source} />
+      <input type="hidden" name="target_id" value={candidate.target_id ?? ""} />
+      {kind && <input type="hidden" name="kind" value={kind} />}
+      {previous && <input type="hidden" name="previous" value={previous} />}
+      <SubmitButton className={className}>Vrátit</SubmitButton>
+    </form>
+  );
+}
+
+async function DashboardContent({
+  kind: kindParam,
+  decided: decidedParam,
+}: {
+  kind: Promise<string | null>;
+  decided: Promise<{ key: string | null; previous: string | null }>;
+}) {
   await connection();
   let goals, recommendations;
   try {
@@ -90,6 +134,10 @@ async function DashboardContent({ kind }: { kind: Promise<string | null> }) {
   ]);
   const { novelty } = recommendations;
   const hidden = recommendations.filtered.filter((f) => f.candidate.decision);
+  const [kind, decidedParams] = await Promise.all([kindParam, decidedParam]);
+  const decided = [...recommendations.ranked, ...recommendations.filtered].find(
+    (i) => i.candidate.key === decidedParams.key && i.candidate.decision,
+  )?.candidate;
 
   return (
     <>
@@ -132,12 +180,33 @@ async function DashboardContent({ kind }: { kind: Promise<string | null> }) {
           title="Do next"
           subtitle={`${recommendations.top.length} nejlepších kroků pro „${recommendations.goal_title}“`}
         >
+          {/* Always rendered, so screen readers announce the text when a decision fills it. */}
+          <div role="status">
+            {decided && (
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-400/30 bg-emerald-400/5 px-4 py-3 text-sm text-zinc-200">
+                <span>
+                  {DECIDED_TEXT[decided.decision!] ?? decided.decision}: „{decided.title}“
+                </span>
+                <UndoForm
+                  candidate={decided}
+                  kind={kind}
+                  previous={decidedParams.previous}
+                  className="rounded-md border border-emerald-400/40 px-3 py-1.5 text-emerald-200 hover:bg-emerald-400/10"
+                />
+              </div>
+            )}
+          </div>
           {recommendations.top.length === 0 ? (
             <EmptyState>Nic k doporučení — načti zdroje nebo uprav profil.</EmptyState>
           ) : (
             <div className="flex flex-col gap-3">
               {recommendations.top.map((item, index) => (
-                <RecommendationCard key={item.candidate.key} item={item} rank={index + 1} />
+                <RecommendationCard
+                  key={item.candidate.key}
+                  item={item}
+                  rank={index + 1}
+                  kind={kind}
+                />
               ))}
             </div>
           )}
@@ -152,13 +221,11 @@ async function DashboardContent({ kind }: { kind: Promise<string | null> }) {
                     <span>
                       {f.candidate.title} — <span className="text-zinc-500">{f.reason}</span>
                     </span>
-                    <form action={undoDecision} className="shrink-0">
-                      <input type="hidden" name="target_type" value={f.candidate.source} />
-                      <input type="hidden" name="target_id" value={f.candidate.target_id ?? ""} />
-                      <SubmitButton className="text-xs text-emerald-300 hover:underline">
-                        Vrátit
-                      </SubmitButton>
-                    </form>
+                    <UndoForm
+                      candidate={f.candidate}
+                      kind={kind}
+                      className="text-xs text-emerald-300 hover:underline"
+                    />
                   </li>
                 ))}
               </ul>
@@ -198,7 +265,7 @@ async function DashboardContent({ kind }: { kind: Promise<string | null> }) {
           <OpportunityList
             ranked={recommendations.ranked}
             filtered={recommendations.filtered}
-            kind={await kind}
+            kind={kind}
           />
         </Section>
       </div>
